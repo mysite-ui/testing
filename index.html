@@ -4,20 +4,18 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>الخطة الشهرية - iLearn</title>
-<!-- crossorigin attribute enables reading cssRules from this stylesheet -->
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" crossorigin="anonymous"/>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --navy:#1a3a6b;--navy-dark:#102951;--navy-light:#2e5da8;
   --blue-row:#3b82cc;--yellow:#f5c518;--orange:#f7941d;--red:#c0392b;
-  --green:#16a34a;
   --white:#fff;--border:#c5d5e8;--bg:#eef3fa;--text:#1a2840;
-  --muted:#6b7a99;--cell-bg:#f7faff;
+  --muted:#6b7a99;--cell-bg:#f7faff;--link:#0066cc;
 }
-body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 60px;direction:rtl;}
-
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 60px;direction:rtl;text-align:right;}
 .topbar{background:var(--navy-dark);padding:10px 32px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 3px 12px rgba(16,41,81,.35);}
 .topbar-brand{display:flex;align-items:center;}
 .topbar-right{display:flex;align-items:center;gap:10px;}
@@ -26,36 +24,33 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
 .btn-ghost{background:rgba(255,255,255,.1);color:var(--white);border:1.5px solid rgba(255,255,255,.22);}
 .btn-ghost:hover:not(:disabled){background:rgba(255,255,255,.18);}
+.btn-share{background:rgba(255,255,255,.15);color:var(--white);border:1.5px solid rgba(255,255,255,.35);font-size:13px;padding:9px 20px;}
+.btn-share:hover{background:rgba(255,255,255,.25);}
 .btn-export{background:linear-gradient(135deg,var(--yellow) 0%,var(--orange) 100%);color:var(--navy-dark);box-shadow:0 3px 14px rgba(245,197,24,.45);font-size:14px;padding:10px 26px;}
-.btn-export:hover:not(:disabled){box-shadow:0 5px 20px rgba(245,197,24,.55);transform:translateY(-1px);}
-
+.btn-export:hover:not(:disabled){box-shadow:0 5px 20px rgba(245,197,24,.55);transform:translateY(-1px);background:linear-gradient(135deg,#ffd11a 0%,#f98c0a 100%);}
 .page{max-width:1000px;margin:28px auto 0;padding:0 16px;display:flex;flex-direction:column;gap:14px;}
-
 .form-card{background:var(--white);border-radius:12px;box-shadow:0 2px 16px rgba(26,58,107,.1);overflow:hidden;}
 .form-card-header{background:linear-gradient(270deg,var(--navy) 0%,var(--navy-light) 100%);padding:14px 24px;display:flex;align-items:center;gap:10px;}
 .form-card-header h2{color:var(--white);font-size:15px;font-weight:800;}
 .form-card-header .dot{width:8px;height:8px;border-radius:50%;background:var(--yellow);box-shadow:0 0 6px rgba(245,197,24,.6);}
-.form-body{padding:20px 24px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;gap:14px;}
+.form-body{padding:20px 24px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:14px;}
 @media(max-width:680px){.form-body{grid-template-columns:1fr 1fr;}}
 .field{display:flex;flex-direction:column;gap:5px;}
 .field label{font-size:11px;font-weight:800;color:var(--navy);}
 .field input,.field select{font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;color:var(--text);background:var(--cell-bg);border:1.5px solid var(--border);border-radius:7px;padding:8px 11px;outline:none;transition:border .15s,box-shadow .15s;width:100%;direction:rtl;text-align:right;}
 .field input:focus,.field select:focus{border-color:var(--navy-light);box-shadow:0 0 0 3px rgba(46,93,168,.12);background:var(--white);}
-.field input.err{border-color:var(--red);animation:shake .3s;}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-
 .preview-card{background:var(--white);border-radius:12px;box-shadow:0 2px 16px rgba(26,58,107,.1);overflow:hidden;}
 
-.tpl-wrap{width:100%;font-family:'Cairo',sans-serif;direction:rtl;background:#fff;}
+/* ── Template ── */
+.tpl-wrap{width:100%;font-family:'Cairo',sans-serif;direction:rtl;}
 .tpl-header{display:grid;grid-template-columns:220px 1fr;border-bottom:2px solid var(--border);min-height:90px;}
 .tpl-logo-cell{padding:8px 14px;display:flex;align-items:center;justify-content:center;border-left:1.5px solid var(--border);background:var(--cell-bg);min-height:90px;overflow:hidden;}
-.tpl-logo-cell img{max-width:180px;max-height:70px;width:auto;height:auto;object-fit:contain;display:block;}
 .tpl-info-panel{display:flex;flex-direction:column;}
-.info-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;height:100%;flex:1;}
+.info-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;height:100%;flex:1;}
 .info-field{display:flex;flex-direction:column;border-left:1.5px solid var(--border);}
 .info-field:last-child{border-left:none;}
 .info-label{background:var(--navy);color:var(--white);font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:6px 4px 5px;text-align:center;}
-.info-value{background:var(--white);display:flex;align-items:center;justify-content:center;padding:10px 8px;font-size:12px;font-weight:800;color:var(--red);flex:1;text-align:center;min-height:52px;word-break:break-word;}
+.info-value{background:var(--white);display:flex;align-items:center;justify-content:center;padding:10px 8px;font-size:12px;font-weight:800;color:var(--red);flex:1;text-align:center;min-height:52px;}
 .tpl-title-bar{background:var(--navy);color:var(--white);text-align:center;font-size:18px;font-weight:900;padding:12px;}
 .tpl-grid-wrap{width:100%;overflow-x:auto;}
 .tpl-grid{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;direction:rtl;}
@@ -67,50 +62,49 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .tpl-grid td{border:1px solid var(--border);vertical-align:top;padding:0;}
 .week-cell{background:var(--cell-bg);color:var(--navy);font-weight:900;font-size:12px;text-align:center;width:68px;vertical-align:middle;padding:6px 4px;}
 .lesson-cell{background:var(--white);color:var(--text);font-size:11px;font-weight:700;text-align:center;width:62px;vertical-align:middle;padding:6px 4px;}
-.input-cell{background:var(--white);vertical-align:top;padding:6px 8px;word-break:break-word;line-height:1.7;font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;color:var(--text);direction:rtl;text-align:right;}
-.input-cell textarea{
-  font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;color:var(--text);
-  background:transparent;border:none;outline:none;width:100%;min-height:44px;height:44px;
-  padding:0;resize:none;overflow:hidden;line-height:1.7;display:block;box-sizing:border-box;
-  word-break:break-word;white-space:pre-wrap;direction:rtl;text-align:right;transition:background .12s;
-}
-.input-cell textarea:focus{background:#eff6ff;}
+.input-cell{background:var(--white);vertical-align:top;padding:6px 8px;}
+.homework-container,.assessment-container{display:flex;flex-direction:column;gap:5px;}
+.input-cell textarea,#assessment{font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;color:var(--text);background:transparent;border:none;outline:none;width:100%;min-height:44px;padding:0;resize:none;line-height:1.7;overflow:hidden;direction:rtl;text-align:right;}
+.input-cell textarea:focus,#assessment:focus{background:#eff6ff;}
+#assessment{min-height:60px;}
 
-.hw-file-area{margin-top:6px;border-top:1px dashed var(--border);padding-top:6px;}
-.hw-upload-btn{
-  display:inline-flex;align-items:center;gap:5px;
-  background:var(--cell-bg);border:1.5px dashed var(--navy-light);
-  border-radius:6px;padding:4px 8px;cursor:pointer;
-  font-family:'Cairo',sans-serif;font-size:11px;font-weight:700;
-  color:var(--navy-light);transition:all .15s;direction:rtl;white-space:nowrap;
-}
-.hw-upload-btn:hover{background:#dbeafe;border-color:var(--navy);}
-.hw-upload-btn input[type="file"]{display:none;}
-.hw-file-badge{
-  display:flex;align-items:center;gap:6px;
-  background:#dcfce7;border:1.5px solid #16a34a;
-  border-radius:6px;padding:4px 8px;margin-top:4px;
-  font-family:'Cairo',sans-serif;font-size:11px;font-weight:700;
-  color:#14532d;direction:rtl;word-break:break-all;
-}
-.hw-file-badge .hw-remove{
-  background:none;border:none;cursor:pointer;
-  color:#dc2626;font-size:13px;font-weight:900;
-  padding:0 2px;line-height:1;flex-shrink:0;font-family:sans-serif;
-}
-.hw-file-badge .hw-remove:hover{color:#7f1d1d;}
+/* ── URL Widget ── */
+.url-widget{width:100%;}
+.url-inp{font-family:'Cairo',sans-serif;font-size:11px;color:var(--link);background:#f8fcff;padding:5px 8px;border:1px dashed #c5d5e8;border-radius:5px;width:100%;direction:ltr;text-align:left;outline:none;transition:border .15s;}
+.url-inp:focus{border-color:var(--navy-light);background:var(--white);}
+.url-inp::placeholder{color:#b8c8dc;font-size:10.5px;}
+.url-display{display:none;flex-direction:row;align-items:center;gap:5px;padding:4px 8px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:5px;text-decoration:none;cursor:pointer;width:100%;}
+.url-display:hover{background:#ddeeff;}
+.url-icon{font-size:13px;flex-shrink:0;line-height:1;}
+.url-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:left;font-size:11px;color:var(--link);text-decoration:underline;}
+.url-edit{flex-shrink:0;font-size:9px;color:var(--muted);padding:1px 5px;border-radius:3px;border:1px solid var(--border);background:var(--white);cursor:pointer;line-height:1.7;white-space:nowrap;}
+.url-edit:hover{background:var(--cell-bg);color:var(--navy);}
+
+/* ── Share modal ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(10,20,50,.55);z-index:800;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-backdrop.open{opacity:1;pointer-events:all;}
+.modal{background:var(--white);border-radius:14px;padding:28px 28px 24px;max-width:480px;width:90%;box-shadow:0 16px 60px rgba(10,20,50,.3);transform:translateY(12px);transition:transform .2s;}
+.modal-backdrop.open .modal{transform:translateY(0);}
+.modal h3{font-size:16px;font-weight:900;color:var(--navy);margin-bottom:6px;}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;}
+.share-row{display:flex;gap:8px;align-items:stretch;}
+.share-inp{flex:1;font-family:'Cairo',sans-serif;font-size:11px;color:var(--text);background:var(--cell-bg);border:1.5px solid var(--border);border-radius:7px;padding:9px 12px;outline:none;direction:ltr;text-align:left;cursor:text;}
+.share-inp:focus{border-color:var(--navy-light);}
+.btn-copy{font-family:'Cairo',sans-serif;font-size:12px;font-weight:800;padding:9px 18px;border-radius:7px;border:none;cursor:pointer;background:var(--navy);color:var(--white);white-space:nowrap;transition:background .15s;}
+.btn-copy:hover{background:var(--navy-light);}
+.btn-copy.copied{background:#14532d;}
+.modal-close{position:absolute;top:14px;left:18px;font-size:20px;background:none;border:none;cursor:pointer;color:var(--muted);line-height:1;}
+.modal-close:hover{color:var(--text);}
+.modal-wrap{position:relative;}
 
 .tpl-assess-bar{background:var(--yellow);color:var(--navy-dark);font-size:15px;font-weight:900;text-align:center;padding:10px;}
 .tpl-assess-body{padding:10px 14px;min-height:64px;border-top:1px solid var(--border);}
-.tpl-assess-body textarea{font-family:'Cairo',sans-serif;font-size:13px;font-weight:500;color:var(--text);background:transparent;border:none;outline:none;width:100%;min-height:56px;padding:4px 0;resize:none;line-height:1.7;direction:rtl;text-align:right;}
 .tpl-footer{background:var(--white);border-top:2px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:center;}
-.tpl-footer img{max-height:56px;width:auto;object-fit:contain;display:block;}
-
 .action-bar{background:var(--white);border-top:2px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
 .action-right{display:flex;gap:10px;align-items:center;}
 .spin{display:inline-block;width:14px;height:14px;border:2.5px solid rgba(26,40,64,.2);border-top-color:var(--navy-dark);border-radius:50%;animation:spinning .65s linear infinite;}
 @keyframes spinning{to{transform:rotate(360deg)}}
-.toast{position:fixed;bottom:24px;left:24px;z-index:999;background:var(--navy-dark);color:var(--white);padding:11px 20px;border-radius:10px;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;box-shadow:0 6px 24px rgba(16,41,81,.4);opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;direction:rtl;}
+.toast{position:fixed;bottom:24px;left:24px;z-index:999;background:var(--navy-dark);color:var(--white);padding:11px 20px;border-radius:10px;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;box-shadow:0 6px 24px rgba(16,41,81,.4);opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;}
 .toast.show{opacity:1;transform:translateY(0);}
 .toast.success{background:#14532d;border-right:4px solid #22c55e;}
 .toast.error{background:#7f1d1d;border-right:4px solid var(--red);}
@@ -121,56 +115,55 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 <nav class="topbar">
   <div class="topbar-brand"></div>
   <div class="topbar-right">
-    <button class="btn btn-ghost" onclick="handleReset()">↺ مسح</button>
-    <button class="btn btn-export" id="exportBtn" onclick="handleExport()">↓ تصدير PDF</button>
+    <button class="btn btn-ghost" onclick="handleReset()">&#x21BA; مسح</button>
+    <button class="btn btn-share" onclick="handleShare()">&#x1F517; مشاركة</button>
+    <button class="btn btn-export" id="exportBtn" onclick="handleExport()">&#x2193; تصدير PDF</button>
   </div>
 </nav>
 
+<!-- Share modal -->
+<div class="modal-backdrop" id="shareModal" onclick="closeShareModal(event)">
+  <div class="modal modal-wrap">
+    <button class="modal-close" onclick="document.getElementById('shareModal').classList.remove('open')">&#x2715;</button>
+    <h3>&#x1F517; مشاركة الخطة</h3>
+    <p>أرسل هذا الرابط لأي شخص — سيفتح الخطة كاملةً جاهزةً للتعديل.</p>
+    <div class="share-row">
+      <input class="share-inp" id="shareInp" type="text" readonly value="" onclick="this.select()"/>
+      <button class="btn-copy" id="copyBtn" onclick="copyShareLink()">نسخ</button>
+    </div>
+  </div>
+</div>
+
 <div class="page">
+
   <div class="form-card">
     <div class="form-card-header">
       <div class="dot"></div>
       <h2>تفاصيل الخطة</h2>
     </div>
     <div class="form-body">
-      <div class="field">
-        <label>اسم الطالب</label>
-        <input id="studentName" type="text" placeholder="اسم الطالب" value=""/>
-      </div>
-      <div class="field">
-        <label>الصف</label>
-        <select id="grade"></select>
-      </div>
-      <div class="field">
-        <label>الشهر</label>
-        <select id="month"></select>
-      </div>
-      <div class="field">
-        <label>المادة</label>
-        <select id="subject">
-          <option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
-          <option value="اللغة العربية">اللغة العربية</option>
-          <option value="القرآن الكريم">القرآن الكريم</option>
-          <option value="الرياضيات">الرياضيات</option>
-          <option value="العلوم">العلوم</option>
-          <option value="الدراسات الاجتماعية">الدراسات الاجتماعية</option>
-          <option value="التربية الإسلامية">التربية الإسلامية</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>السنة</label>
-        <select id="year"></select>
-      </div>
+      <div class="field"><label>اسم الطالب</label><input id="studentName" type="text" placeholder="اسم الطالب" value=""/></div>
+      <div class="field"><label>الصف</label><select id="grade"></select></div>
+      <div class="field"><label>الشهر</label><select id="month"></select></div>
+      <div class="field"><label>المادة</label><select id="subject">
+        <option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
+        <option value="اللغة العربية">اللغة العربية</option>
+        <option value="القرآن الكريم">القرآن الكريم</option>
+        <option value="الرياضيات">الرياضيات</option>
+        <option value="العلوم">العلوم</option>
+        <option value="الدراسات الاجتماعية">الدراسات الاجتماعية</option>
+        <option value="التربية الإسلامية">التربية الإسلامية</option>
+      </select></div>
+      <div class="field"><label>السنة</label><input id="year" type="number" min="2020" max="2099" placeholder="2025"/></div>
     </div>
   </div>
 
   <div class="preview-card">
-    <div class="tpl-wrap" id="tplPreview">
+    <div class="tpl-wrap" id="tplWrap">
+
       <div class="tpl-header">
         <div class="tpl-logo-cell">
-          <img src="./Logo-white(1).jpg" alt="iLearn Logo" id="headerLogoImg"
-               onerror="this.style.display='none';document.getElementById('logoFallback').style.display='flex'"/>
-          <div id="logoFallback" style="display:none;width:120px;height:60px;border:2px dashed var(--border);border-radius:8px;align-items:center;justify-content:center;color:var(--muted);font-size:11px;font-weight:700;text-align:center;line-height:1.4;">الشعار<br/>هنا</div>
+          <div style="width:120px;height:60px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;font-weight:700;text-align:center;">الشعار هنا</div>
         </div>
         <div class="tpl-info-panel">
           <div class="info-row">
@@ -178,7 +171,6 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
             <div class="info-field"><div class="info-label">الشهر</div><div class="info-value" id="preview-month">—</div></div>
             <div class="info-field"><div class="info-label">المادة</div><div class="info-value" id="preview-subject">—</div></div>
             <div class="info-field"><div class="info-label">الصف</div><div class="info-value" id="preview-grade">—</div></div>
-            <div class="info-field"><div class="info-label">السنة</div><div class="info-value" id="preview-year">—</div></div>
           </div>
         </div>
       </div>
@@ -202,383 +194,165 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 
       <div class="tpl-assess-bar">التقييم</div>
       <div class="tpl-assess-body">
-        <textarea id="assessment" placeholder="اكتب التقييم الشهري، نقاط القوة، الأهداف والملاحظات…" rows="3"></textarea>
+        <div class="assessment-container">
+          <textarea id="assessment" placeholder="اكتب التقييم الشهري، نقاط القوة، الأهداف والملاحظات…"></textarea>
+          <div class="url-widget" id="assessUrlWidget">
+            <input class="url-inp" type="url" placeholder="أضف رابطاً للتقييم (اختياري)" />
+            <a class="url-display" href="#" target="_blank" rel="noopener">
+              <span class="url-icon">🔗</span>
+              <span class="url-label"></span>
+              <span class="url-edit">تعديل</span>
+            </a>
+          </div>
+        </div>
       </div>
 
       <div class="tpl-footer">
-        <img src="./image1.png" alt="iLearn Contact Info" id="footerBannerImg"/>
+        <div style="height:56px;line-height:56px;color:var(--muted);font-size:13px;">معلومات الاتصال هنا</div>
       </div>
+
     </div>
 
     <div class="action-bar">
       <div></div>
       <div class="action-right">
         <button class="btn btn-ghost" style="color:var(--navy);border-color:var(--border);" onclick="handleReset()">مسح الكل</button>
-        <button class="btn btn-export" id="exportBtn2" onclick="handleExport()">↓ تصدير PDF</button>
+        <button class="btn btn-share" style="color:var(--navy);border-color:var(--border);background:#f0f5ff;" onclick="handleShare()">&#x1F517; مشاركة</button>
+        <button class="btn btn-export" id="exportBtn2" onclick="handleExport()">&#x2193; تصدير PDF</button>
       </div>
     </div>
   </div>
-</div>
 
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════════════════════
-// ARABIC RESHAPER — Maps Arabic characters to their Presentation Forms B
-// (U+FE70–U+FEFF) so jsPDF renders connected/shaped glyphs correctly.
-// This is the core fix for "gibberish" Arabic in jsPDF.
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const ArabicShaper = (() => {
-  // Each entry: [isolated, final, initial, medial]
-  // Characters that only connect to the right have initial===isolated, medial===final
-  const MAP = {
-    '\u0621': ['\uFE80', '\uFE80', '\uFE80', '\uFE80'], // ء hamza
-    '\u0622': ['\uFE81', '\uFE82', '\uFE81', '\uFE82'], // آ
-    '\u0623': ['\uFE83', '\uFE84', '\uFE83', '\uFE84'], // أ
-    '\u0624': ['\uFE85', '\uFE86', '\uFE85', '\uFE86'], // ؤ
-    '\u0625': ['\uFE87', '\uFE88', '\uFE87', '\uFE88'], // إ
-    '\u0626': ['\uFE89', '\uFE8A', '\uFE8B', '\uFE8C'], // ئ
-    '\u0627': ['\uFE8D', '\uFE8E', '\uFE8D', '\uFE8E'], // ا
-    '\u0628': ['\uFE8F', '\uFE90', '\uFE91', '\uFE92'], // ب
-    '\u0629': ['\uFE93', '\uFE94', '\uFE93', '\uFE94'], // ة
-    '\u062A': ['\uFE95', '\uFE96', '\uFE97', '\uFE98'], // ت
-    '\u062B': ['\uFE99', '\uFE9A', '\uFE9B', '\uFE9C'], // ث
-    '\u062C': ['\uFE9D', '\uFE9E', '\uFE9F', '\uFEA0'], // ج
-    '\u062D': ['\uFEA1', '\uFEA2', '\uFEA3', '\uFEA4'], // ح
-    '\u062E': ['\uFEA5', '\uFEA6', '\uFEA7', '\uFEA8'], // خ
-    '\u062F': ['\uFEA9', '\uFEAA', '\uFEA9', '\uFEAA'], // د
-    '\u0630': ['\uFEAB', '\uFEAC', '\uFEAB', '\uFEAC'], // ذ
-    '\u0631': ['\uFEAD', '\uFEAE', '\uFEAD', '\uFEAE'], // ر
-    '\u0632': ['\uFEAF', '\uFEB0', '\uFEAF', '\uFEB0'], // ز
-    '\u0633': ['\uFEB1', '\uFEB2', '\uFEB3', '\uFEB4'], // س
-    '\u0634': ['\uFEB5', '\uFEB6', '\uFEB7', '\uFEB8'], // ش
-    '\u0635': ['\uFEB9', '\uFEBA', '\uFEBB', '\uFEBC'], // ص
-    '\u0636': ['\uFEBD', '\uFEBE', '\uFEBF', '\uFEC0'], // ض
-    '\u0637': ['\uFEC1', '\uFEC2', '\uFEC3', '\uFEC4'], // ط
-    '\u0638': ['\uFEC5', '\uFEC6', '\uFEC7', '\uFEC8'], // ظ
-    '\u0639': ['\uFEC9', '\uFECA', '\uFECB', '\uFECC'], // ع
-    '\u063A': ['\uFECD', '\uFECE', '\uFECF', '\uFED0'], // غ
-    '\u0640': ['\u0640', '\u0640', '\u0640', '\u0640'],   // ـ tatweel
-    '\u0641': ['\uFED1', '\uFED2', '\uFED3', '\uFED4'], // ف
-    '\u0642': ['\uFED5', '\uFED6', '\uFED7', '\uFED8'], // ق
-    '\u0643': ['\uFED9', '\uFEDA', '\uFEDB', '\uFEDC'], // ك
-    '\u0644': ['\uFEDD', '\uFEDE', '\uFEDF', '\uFEE0'], // ل
-    '\u0645': ['\uFEE1', '\uFEE2', '\uFEE3', '\uFEE4'], // م
-    '\u0646': ['\uFEE5', '\uFEE6', '\uFEE7', '\uFEE8'], // ن
-    '\u0647': ['\uFEE9', '\uFEEA', '\uFEEB', '\uFEEC'], // ه
-    '\u0648': ['\uFEED', '\uFEEE', '\uFEED', '\uFEEE'], // و
-    '\u0649': ['\uFEEF', '\uFEF0', '\uFEEF', '\uFEF0'], // ى
-    '\u064A': ['\uFEF1', '\uFEF2', '\uFEF3', '\uFEF4'], // ي
-  };
-
-  // Characters that CANNOT connect to the left (next char in visual order)
-  // i.e. they only have isolated and final forms
-  const RIGHT_ONLY = new Set([
-    '\u0621','\u0622','\u0623','\u0624','\u0625','\u0627',
-    '\u062F','\u0630','\u0631','\u0632','\u0648','\u0629','\u0649'
-  ]);
-
-  // Lam-Alef ligatures
-  const LAM = '\u0644';
-  const LAM_ALEF = {
-    '\u0622': ['\uFEF5', '\uFEF6'], // لآ  [isolated, final]
-    '\u0623': ['\uFEF7', '\uFEF8'], // لأ
-    '\u0625': ['\uFEF9', '\uFEFA'], // لإ
-    '\u0627': ['\uFEFB', '\uFEFC'], // لا
-  };
-
-  // Diacritics / tashkeel — these don't break joining
-  function isDiacritic(ch) {
-    const c = ch.charCodeAt(0);
-    return (c >= 0x064B && c <= 0x065F) || (c >= 0x0610 && c <= 0x061A) || c === 0x0670;
-  }
-
-  function isArabicLetter(ch) {
-    return MAP.hasOwnProperty(ch);
-  }
-
-  // Returns true if the character can connect to its left neighbour
-  function connectsLeft(ch) {
-    return isArabicLetter(ch) && !RIGHT_ONLY.has(ch);
-  }
-
-  function shape(text) {
-    if (!text) return '';
-
-    // Strip and collect diacritics positions (we re-insert after shaping)
-    const chars = [];
-    const diacriticsAfter = {}; // index -> array of diacritic chars
-    for (let i = 0; i < text.length; i++) {
-      if (isDiacritic(text[i])) {
-        const idx = chars.length - 1;
-        if (idx >= 0) {
-          if (!diacriticsAfter[idx]) diacriticsAfter[idx] = [];
-          diacriticsAfter[idx].push(text[i]);
-        }
-      } else {
-        chars.push(text[i]);
-      }
-    }
-
-    const result = [];
-    let i = 0;
-    while (i < chars.length) {
-      const ch = chars[i];
-
-      if (!isArabicLetter(ch)) {
-        result.push(ch);
-        // Re-insert diacritics
-        if (diacriticsAfter[i]) result.push(...diacriticsAfter[i]);
-        i++;
-        continue;
-      }
-
-      // Check for Lam-Alef ligature
-      if (ch === LAM && i + 1 < chars.length && LAM_ALEF[chars[i + 1]]) {
-        const alef = chars[i + 1];
-        // Determine if lam has a previous connector
-        let prevConnects = false;
-        for (let p = i - 1; p >= 0; p--) {
-          if (isArabicLetter(chars[p])) { prevConnects = connectsLeft(chars[p]); break; }
-          if (!isDiacritic(chars[p])) break;
-        }
-        const lig = LAM_ALEF[alef];
-        result.push(prevConnects ? lig[1] : lig[0]);
-        // Diacritics on both lam and alef
-        if (diacriticsAfter[i]) result.push(...diacriticsAfter[i]);
-        if (diacriticsAfter[i + 1]) result.push(...diacriticsAfter[i + 1]);
-        i += 2;
-        continue;
-      }
-
-      // Determine context: does prev connect to us? do we connect to next?
-      let prevConnects = false;
-      for (let p = i - 1; p >= 0; p--) {
-        if (isArabicLetter(chars[p])) { prevConnects = connectsLeft(chars[p]); break; }
-        if (!isDiacritic(chars[p])) break;
-      }
-
-      let nextIsArabic = false;
-      for (let n = i + 1; n < chars.length; n++) {
-        if (isArabicLetter(chars[n])) { nextIsArabic = true; break; }
-        if (!isDiacritic(chars[n])) break;
-      }
-
-      const canLeft = connectsLeft(ch);
-
-      // 0=isolated, 1=final, 2=initial, 3=medial
-      let formIndex;
-      if (prevConnects && nextIsArabic && canLeft) formIndex = 3; // medial
-      else if (prevConnects) formIndex = 1; // final
-      else if (nextIsArabic && canLeft) formIndex = 2; // initial
-      else formIndex = 0; // isolated
-
-      result.push(MAP[ch][formIndex]);
-      if (diacriticsAfter[i]) result.push(...diacriticsAfter[i]);
-      i++;
-    }
-
-    return result.join('');
-  }
-
-  // Process full text: shape Arabic runs, reverse for RTL, handle mixed content
-  function processLine(text) {
-    if (!text) return '';
-    // Shape the Arabic characters
-    const shaped = shape(text);
-    // Reverse the entire string for RTL (jsPDF draws LTR)
-    // But keep Latin/number runs in their original order (LTR within RTL)
-    return bidiReverse(shaped);
-  }
-
-  function bidiReverse(str) {
-    // Split into runs: Arabic+diacritics+punctuation vs Latin/digits
-    const runs = [];
-    let current = '';
-    let currentIsRTL = null;
-
-    for (let i = 0; i < str.length; i++) {
-      const c = str.charCodeAt(i);
-      const isRTL = (c >= 0x0600 && c <= 0x06FF) || (c >= 0xFB50 && c <= 0xFEFF) ||
-                    (c >= 0x0750 && c <= 0x077F) || c === 0x200F;
-      const isNeutral = /[\s\.\,\:\;\!\?\-\(\)\[\]\{\}\/\\\"\'،؟؛٫٬]/.test(str[i]);
-
-      if (isNeutral) {
-        current += str[i];
-        continue;
-      }
-
-      if (currentIsRTL === null) {
-        currentIsRTL = isRTL;
-        current += str[i];
-      } else if (isRTL === currentIsRTL) {
-        current += str[i];
-      } else {
-        runs.push({ text: current, rtl: currentIsRTL });
-        current = str[i];
-        currentIsRTL = isRTL;
-      }
-    }
-    if (current) runs.push({ text: current, rtl: currentIsRTL ?? true });
-
-    // Reverse overall order (RTL paragraph) and reverse RTL runs internally
-    const reversed = runs.reverse().map(run => {
-      if (run.rtl || run.rtl === null) {
-        return run.text.split('').reverse().join('');
-      }
-      return run.text; // LTR runs stay as-is
-    });
-
-    return reversed.join('');
-  }
-
-  return { shape, processLine, bidiReverse };
-})();
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// APP LOGIC (unchanged from original)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو',
-                 'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-
+// ── Dropdowns ─────────────────────────────────────────────────────────────────
+const MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const gradeEl=document.getElementById('grade');
 const monthEl=document.getElementById('month');
-const yearEl=document.getElementById('year');
+for(let g=1;g<=12;g++){const o=document.createElement('option');o.value=g;o.textContent='الصف '+g;if(g===5)o.selected=true;gradeEl.appendChild(o);}
+MONTHS_AR.forEach((m,i)=>{const o=document.createElement('option');o.value=m;o.textContent=m;if(i===new Date().getMonth())o.selected=true;monthEl.appendChild(o);});
+document.getElementById('year').value=new Date().getFullYear();
 
-for(let g=1;g<=12;g++){
-  const o=document.createElement('option');
-  o.value=g;o.textContent='الصف '+g;
-  if(g===5)o.selected=true;
-  gradeEl.appendChild(o);
-}
-MONTHS_AR.forEach((m,i)=>{
-  const o=document.createElement('option');
-  o.value=m;o.textContent=m;
-  if(i===new Date().getMonth())o.selected=true;
-  monthEl.appendChild(o);
-});
-const currentYear=new Date().getFullYear();
-for(let y=currentYear-2;y<=currentYear+3;y++){
-  const o=document.createElement('option');
-  o.value=y;o.textContent=y;
-  if(y===currentYear)o.selected=true;
-  yearEl.appendChild(o);
-}
-
+// ── Grid state ────────────────────────────────────────────────────────────────
 const grid=[];
-for(let w=1;w<=4;w++)
-  for(let l=1;l<=2;l++)
-    grid.push({week:w,lesson:l,content:'',outcomes:'',homework:'',homeworkFile:null});
+for(let w=1;w<=4;w++) for(let l=1;l<=2;l++)
+  grid.push({week:w,lesson:l,content:'',outcomes:'',homeworkText:'',homeworkUrl:''});
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function autoResize(ta){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';}
 function resizeAll(){document.querySelectorAll('#planBody textarea,#assessment').forEach(autoResize);}
 
-function readFileAsBase64(file){
-  return new Promise((res,rej)=>{
-    const fr=new FileReader();
-    fr.onload=e=>res(e.target.result.split(',')[1]);
-    fr.onerror=rej;
-    fr.readAsDataURL(file);
-  });
+// ── Get element offset relative to an ancestor (scroll-independent) ──────────
+function offsetRelTo(el, ancestor){
+  let top=0, left=0;
+  while(el && el!==ancestor){
+    top+=el.offsetTop;
+    left+=el.offsetLeft;
+    el=el.offsetParent;
+  }
+  return {top, left};
 }
 
+// ── URL Widget ────────────────────────────────────────────────────────────────
+function wireUrlWidget(widget, onChange){
+  const inp    = widget.querySelector('.url-inp');
+  const disp   = widget.querySelector('.url-display');
+  const label  = widget.querySelector('.url-label');
+  const editBtn= widget.querySelector('.url-edit');
+
+  function normalise(v){
+    v=(v||'').trim();
+    if(v && !/^https?:\/\//i.test(v)) v='https://'+v;
+    return v;
+  }
+  function showLink(url){
+    disp.href=url; label.textContent=url;
+    inp.style.display='none'; disp.style.display='flex';
+    if(onChange) onChange(url);
+  }
+  function showInput(){
+    disp.style.display='none'; inp.style.display='';
+    if(onChange) onChange('');
+  }
+  function commit(){
+    const url=normalise(inp.value);
+    if(url){ inp.value=url; showLink(url); } else showInput();
+  }
+
+  inp.addEventListener('blur', commit);
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){e.preventDefault();commit();} });
+  editBtn.addEventListener('click', e=>{
+    e.preventDefault(); e.stopPropagation();
+    inp.value=(disp.href==='#'||disp.href===location.href+'#')?'':disp.href;
+    showInput();
+  });
+
+  widget.getUrl=()=>(disp.style.display==='flex'&&disp.href!=='#'&&!disp.href.endsWith('#'))?disp.href:'';
+  widget.setUrl=(url)=>{ if(url){inp.value=url;showLink(url);}else{inp.value='';showInput();} };
+  showInput(); // init inline styles
+}
+
+wireUrlWidget(document.getElementById('assessUrlWidget'));
+
+// ── Build grid ────────────────────────────────────────────────────────────────
 function buildGrid(){
   const tbody=document.getElementById('planBody');
   tbody.innerHTML='';
   for(let w=1;w<=4;w++){
     for(let l=1;l<=2;l++){
       const idx=(w-1)*2+(l-1);
+      const item=grid[idx];
       const row=document.createElement('tr');
-
       if(l===1){
         const wc=document.createElement('td');
-        wc.className='week-cell';wc.rowSpan=2;
-        wc.textContent='الأسبوع '+w;
+        wc.className='week-cell';wc.rowSpan=2;wc.textContent='الأسبوع '+w;
         row.appendChild(wc);
       }
+      const lc=document.createElement('td');lc.className='lesson-cell';lc.textContent='الدرس '+l;row.appendChild(lc);
 
-      const lc=document.createElement('td');
-      lc.className='lesson-cell';
-      lc.textContent='الدرس '+l;
-      row.appendChild(lc);
-
-      ['content','outcomes','homework'].forEach(key=>{
-        const td=document.createElement('td');
-        td.className='input-cell';
-        td.style.padding='4px 6px';
-
+      ['content','outcomes'].forEach(key=>{
+        const td=document.createElement('td');td.className='input-cell';
         const ta=document.createElement('textarea');
-        ta.placeholder=key==='content'?'الموضوع…':key==='outcomes'?'سيكون الطالب قادراً على…':'نص الواجب…';
-        ta.value=grid[idx][key];
-        ta.addEventListener('input',e=>{grid[idx][key]=e.target.value;autoResize(e.target);});
-        td.appendChild(ta);
-
-        if(key==='homework'){
-          const fileArea=document.createElement('div');
-          fileArea.className='hw-file-area';
-          const fileData=grid[idx].homeworkFile;
-
-          if(!fileData){
-            const uploadLabel=document.createElement('label');
-            uploadLabel.className='hw-upload-btn';
-            uploadLabel.innerHTML='📎 إرفاق ملف الواجب';
-            const fileInput=document.createElement('input');
-            fileInput.type='file';
-            fileInput.accept='.pdf,.doc,.docx,.png,.jpg,.jpeg,.ppt,.pptx,.xls,.xlsx';
-            fileInput.addEventListener('change',async e=>{
-              const file=e.target.files[0];
-              if(!file)return;
-              if(file.size>20*1024*1024){showToast('الملف كبير جداً (الحد 20 MB)','error');return;}
-              try{
-                const b64=await readFileAsBase64(file);
-                grid[idx].homeworkFile={name:file.name,base64:b64,type:file.type};
-                buildGrid();
-                requestAnimationFrame(resizeAll);
-                showToast('✓ تم إرفاق: '+file.name,'success');
-              }catch(err){showToast('فشل قراءة الملف','error');}
-            });
-            uploadLabel.appendChild(fileInput);
-            fileArea.appendChild(uploadLabel);
-          } else {
-            const badge=document.createElement('div');
-            badge.className='hw-file-badge';
-            const nameSpan=document.createElement('span');
-            nameSpan.textContent='📄 '+fileData.name;
-            nameSpan.style.flex='1';
-            const removeBtn=document.createElement('button');
-            removeBtn.className='hw-remove';
-            removeBtn.type='button';
-            removeBtn.textContent='✕';
-            removeBtn.title='إزالة الملف';
-            removeBtn.addEventListener('click',()=>{
-              grid[idx].homeworkFile=null;
-              buildGrid();
-              requestAnimationFrame(resizeAll);
-            });
-            badge.appendChild(nameSpan);
-            badge.appendChild(removeBtn);
-            fileArea.appendChild(badge);
-          }
-          td.appendChild(fileArea);
-        }
-        row.appendChild(td);
+        ta.placeholder=key==='content'?'الموضوع…':'سيكون الطالب قادراً على…';
+        ta.value=item[key];
+        ta.addEventListener('input',e=>{item[key]=e.target.value;autoResize(e.target);});
+        td.appendChild(ta);row.appendChild(td);
       });
+
+      const tdHw=document.createElement('td');tdHw.className='input-cell';
+      const cont=document.createElement('div');cont.className='homework-container';
+      const taHw=document.createElement('textarea');
+      taHw.placeholder='الواجب…';taHw.value=item.homeworkText;
+      taHw.addEventListener('input',e=>{item.homeworkText=e.target.value;autoResize(e.target);});
+
+      const wgt=document.createElement('div');wgt.className='url-widget';
+      const wInp=document.createElement('input');wInp.className='url-inp';wInp.type='url';wInp.placeholder='أضف رابطاً (اختياري)';
+      const wA=document.createElement('a');wA.className='url-display';wA.href='#';wA.target='_blank';wA.rel='noopener';
+      const wIcon=document.createElement('span');wIcon.className='url-icon';wIcon.textContent='🔗';
+      const wLabel=document.createElement('span');wLabel.className='url-label';
+      const wEdit=document.createElement('span');wEdit.className='url-edit';wEdit.textContent='تعديل';
+      wA.appendChild(wIcon);wA.appendChild(wLabel);wA.appendChild(wEdit);
+      wgt.appendChild(wInp);wgt.appendChild(wA);
+      wireUrlWidget(wgt, url=>{ item.homeworkUrl=url; });
+      if(item.homeworkUrl) wgt.setUrl(item.homeworkUrl);
+
+      cont.appendChild(taHw);cont.appendChild(wgt);
+      tdHw.appendChild(cont);row.appendChild(tdHw);
       tbody.appendChild(row);
     }
   }
+  resizeAll();
 }
 buildGrid();
-requestAnimationFrame(resizeAll);
 
+// ── Preview sync ──────────────────────────────────────────────────────────────
 function syncPreview(){
   document.getElementById('preview-name').textContent=document.getElementById('studentName').value||'—';
   document.getElementById('preview-month').textContent=document.getElementById('month').value||'—';
   document.getElementById('preview-subject').textContent=document.getElementById('subject').value||'—';
   document.getElementById('preview-grade').textContent='الصف '+document.getElementById('grade').value;
-  document.getElementById('preview-year').textContent=document.getElementById('year').value||'—';
 }
 ['studentName','grade','month','subject','year'].forEach(id=>{
   document.getElementById(id).addEventListener('input',syncPreview);
@@ -586,6 +360,54 @@ function syncPreview(){
 });
 syncPreview();
 
+// ── Collect / restore full state ──────────────────────────────────────────────
+function collectState(){
+  return {
+    studentName: document.getElementById('studentName').value,
+    grade:       document.getElementById('grade').value,
+    month:       document.getElementById('month').value,
+    subject:     document.getElementById('subject').value,
+    year:        document.getElementById('year').value,
+    assessment:  document.getElementById('assessment').value,
+    assessUrl:   document.getElementById('assessUrlWidget').getUrl(),
+    grid:        grid.map(r=>({content:r.content,outcomes:r.outcomes,homeworkText:r.homeworkText,homeworkUrl:r.homeworkUrl}))
+  };
+}
+function applyState(s){
+  if(!s) return;
+  if(s.studentName!==undefined) document.getElementById('studentName').value=s.studentName;
+  if(s.grade!==undefined)       document.getElementById('grade').value=s.grade;
+  if(s.month!==undefined)       document.getElementById('month').value=s.month;
+  if(s.subject!==undefined)     document.getElementById('subject').value=s.subject;
+  if(s.year!==undefined)        document.getElementById('year').value=s.year;
+  if(s.assessment!==undefined)  document.getElementById('assessment').value=s.assessment;
+  if(s.assessUrl)               document.getElementById('assessUrlWidget').setUrl(s.assessUrl);
+  if(s.grid && s.grid.length===grid.length){
+    s.grid.forEach((r,i)=>Object.assign(grid[i],r));
+  }
+  buildGrid();
+  syncPreview();
+}
+
+// ── URL hash encode/decode ────────────────────────────────────────────────────
+function stateToHash(s){
+  try{ return '#v1:'+btoa(unescape(encodeURIComponent(JSON.stringify(s)))); }
+  catch(e){ return ''; }
+}
+function hashToState(hash){
+  try{
+    if(!hash||!hash.startsWith('#v1:')) return null;
+    return JSON.parse(decodeURIComponent(escape(atob(hash.slice(4)))));
+  }catch(e){ return null; }
+}
+
+// ── Restore from URL hash on load ─────────────────────────────────────────────
+(function(){
+  const s=hashToState(location.hash);
+  if(s) applyState(s);
+})();
+
+// ── Reset ─────────────────────────────────────────────────────────────────────
 function handleReset(){
   document.getElementById('studentName').value='';
   document.getElementById('grade').value=5;
@@ -593,472 +415,152 @@ function handleReset(){
   document.getElementById('subject').value='اللغة الإنجليزية';
   document.getElementById('year').value=new Date().getFullYear();
   document.getElementById('assessment').value='';
-  grid.forEach(r=>{r.content='';r.outcomes='';r.homework='';r.homeworkFile=null;});
-  buildGrid();requestAnimationFrame(resizeAll);syncPreview();
+  document.getElementById('assessUrlWidget').setUrl('');
+  grid.forEach(r=>{r.content='';r.outcomes='';r.homeworkText='';r.homeworkUrl='';});
+  buildGrid(); syncPreview();
+  history.replaceState(null,'',location.pathname+location.search);
   showToast('تم المسح','success');
 }
 
+// ── Share ─────────────────────────────────────────────────────────────────────
+function handleShare(){
+  const hash=stateToHash(collectState());
+  const url=location.origin+location.pathname+location.search+hash;
+  document.getElementById('shareInp').value=url;
+  document.getElementById('copyBtn').textContent='نسخ';
+  document.getElementById('copyBtn').classList.remove('copied');
+  document.getElementById('shareModal').classList.add('open');
+}
+function closeShareModal(e){
+  if(e.target===document.getElementById('shareModal'))
+    document.getElementById('shareModal').classList.remove('open');
+}
+function copyShareLink(){
+  const inp=document.getElementById('shareInp');
+  inp.select();
+  navigator.clipboard.writeText(inp.value).then(()=>{
+    const btn=document.getElementById('copyBtn');
+    btn.textContent='✓ تم النسخ';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='نسخ';btn.classList.remove('copied');},2200);
+  }).catch(()=>{
+    document.execCommand('copy');
+    showToast('تم نسخ الرابط','success');
+  });
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
 let toastTimer;
 function showToast(msg,type='success'){
   const t=document.getElementById('toast');
   t.textContent=msg;t.className='toast '+type+' show';
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.className='toast',2800);
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className='toast',2800);
 }
 
-function slug(text){
-  return String(text).toLowerCase().trim().replace(/\s+/g,'-').replace(/[^a-z0-9\u0600-\u06FF-]/g,'');
-}
+// ── PDF Export ────────────────────────────────────────────────────────────────
+async function handleExport(){
+  const name=document.getElementById('studentName').value.trim();
+  if(!name){showToast('الرجاء إدخال اسم الطالب','error');return;}
 
+  const btns=[document.getElementById('exportBtn'),document.getElementById('exportBtn2')];
+  btns.forEach(b=>{b.disabled=true;b.innerHTML='<span class="spin"></span> جارٍ الإنشاء…';});
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// FONT LOADING
-// Strategy 1: Read the Google Fonts stylesheet (now with crossorigin) to get
-//             the fonts.gstatic.com URL, then fetch the binary (gstatic has CORS).
-// Strategy 2: Inject a new <link> with crossorigin and read its rules.
-// Strategy 3: Create a hidden iframe that fetches the CSS as same-page text.
-// ═══════════════════════════════════════════════════════════════════════════════
+  // A4 landscape: 841.89 × 595.28 pt  →  at 96dpi: 1122.5 × 793.7 px
+  const A4_W_PX=1123;
+  const A4_H_PX=794;
 
-let fontLoaded = false;
-let fontBase64 = '';
+  try{
+    const wrap=document.getElementById('tplWrap');
 
-function arrayBufferToBase64(buffer) {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  const CHUNK = 8192;
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    const slice = bytes.subarray(i, Math.min(i + CHUNK, bytes.length));
-    binary += String.fromCharCode.apply(null, slice);
-  }
-  return btoa(binary);
-}
+    const canvas=await html2canvas(wrap,{
+      scale:2,
+      useCORS:true,
+      allowTaint:false,
+      backgroundColor:'#ffffff',
+      logging:false,
+      windowWidth:A4_W_PX,
+      width:A4_W_PX,
+      height:A4_H_PX,
+      onclone(clonedDoc, clonedEl){
+        clonedEl.style.cssText+=(
+          ';width:'+A4_W_PX+'px!important'+
+          ';min-width:'+A4_W_PX+'px!important'+
+          ';max-width:'+A4_W_PX+'px!important'+
+          ';height:'+A4_H_PX+'px!important'+
+          ';overflow:hidden!important'+
+          ';box-sizing:border-box!important'
+        );
+        clonedDoc.querySelectorAll('.tpl-grid-wrap').forEach(e=>{e.style.overflow='visible';e.style.width='100%';});
+        clonedEl.style.fontSize='11px';
 
-// Extract font URL from any loaded Google Fonts stylesheet
-function extractFontUrlFromStylesheets() {
-  for (const sheet of document.styleSheets) {
-    try {
-      const rules = sheet.cssRules || sheet.rules;
-      if (!rules) continue;
-      for (const rule of rules) {
-        if (!(rule instanceof CSSFontFaceRule)) continue;
-        const family = rule.style.getPropertyValue('font-family');
-        if (!family || !family.replace(/['"]/g,'').trim().includes('Cairo')) continue;
-        // Prefer heavier weights — they look better for headings
-        const src = rule.style.getPropertyValue('src');
-        if (!src) continue;
-        const urlMatch = src.match(/url\(["']?(https:\/\/fonts\.gstatic\.com[^"')]+)["']?\)/);
-        if (urlMatch) return urlMatch[1];
-      }
-    } catch (e) {
-      // SecurityError if cross-origin without crossorigin attr
-      console.warn('Cannot read stylesheet:', e.message);
-    }
-  }
-  return null;
-}
-
-// Fetch a font URL → base64
-async function fetchFontAsBase64(url) {
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error('Font fetch ' + resp.status);
-  const buf = await resp.arrayBuffer();
-  if (buf.byteLength < 5000) throw new Error('Font too small, probably not valid');
-  return arrayBufferToBase64(buf);
-}
-
-// Strategy: inject a fresh <link crossorigin> and wait for it to load,
-// then read its cssRules
-function injectCrossOriginLink() {
-  return new Promise((resolve) => {
-    // Remove any existing non-crossorigin Google Fonts links
-    const existing = document.querySelectorAll('link[href*="fonts.googleapis.com"]');
-    existing.forEach(el => {
-      if (!el.crossOrigin) el.remove();
-    });
-
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.crossOrigin = 'anonymous';
-    link.href = 'https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap';
-    link.onload = () => {
-      // Give browser a moment to parse the stylesheet
-      setTimeout(() => resolve(true), 100);
-    };
-    link.onerror = () => resolve(false);
-    document.head.appendChild(link);
-  });
-}
-
-async function loadFont() {
-  if (fontLoaded) return true;
-  try {
-    // Attempt 1: read from already-loaded stylesheets
-    let fontUrl = extractFontUrlFromStylesheets();
-
-    // Attempt 2: if that failed (CORS), inject a fresh crossorigin link
-    if (!fontUrl) {
-      console.log('Injecting crossorigin stylesheet...');
-      await injectCrossOriginLink();
-      fontUrl = extractFontUrlFromStylesheets();
-    }
-
-    // Attempt 3: if still no URL, manually fetch the CSS text
-    // (not as a stylesheet but as plain text via a CORS proxy approach)
-    if (!fontUrl) {
-      console.log('Trying XHR for Google Fonts CSS...');
-      try {
-        // Google Fonts API responds with TTF URLs when User-Agent is empty/old
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', 'https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap', true);
-        const cssText = await new Promise((resolve, reject) => {
-          xhr.onload = () => resolve(xhr.responseText);
-          xhr.onerror = () => reject(new Error('XHR failed'));
-          xhr.send();
+        // Textareas → divs
+        clonedDoc.querySelectorAll('textarea').forEach(ta=>{
+          const div=clonedDoc.createElement('div');
+          div.style.cssText='font-family:Cairo,sans-serif;font-size:11px;font-weight:600;color:#1a2840;line-height:1.5;white-space:pre-wrap;word-break:break-word;width:100%;padding:0;direction:rtl;text-align:right;background:transparent;';
+          div.textContent=ta.value;
+          ta.parentNode.replaceChild(div,ta);
         });
-        const match = cssText.match(/url\((https:\/\/fonts\.gstatic\.com[^)]+)\)/);
-        if (match) fontUrl = match[1];
-      } catch (e) {
-        console.warn('XHR approach failed:', e);
-      }
-    }
 
-    if (fontUrl) {
-      console.log('Fetching font binary from:', fontUrl);
-      fontBase64 = await fetchFontAsBase64(fontUrl);
-      fontLoaded = true;
-      console.log('Font loaded, base64 length:', fontBase64.length);
-      return true;
-    }
-
-    throw new Error('Could not determine font URL from any source');
-  } catch (e) {
-    console.error('Font loading failed:', e);
-    // Even on failure, the Arabic reshaper still works — text will just use
-    // Helvetica which won't display Arabic correctly but won't crash
-    return false;
-  }
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// PDF EXPORT — Pure jsPDF with proper Arabic shaping
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function hexToRgb(hex) {
-  return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
-}
-
-function fillRect(doc,x,y,w,h,hex) {
-  doc.setFillColor(...hexToRgb(hex));
-  doc.rect(x,y,w,h,'F');
-}
-
-function strokeRect(doc,x,y,w,h,hex,lw=0.3) {
-  doc.setDrawColor(...hexToRgb(hex));
-  doc.setLineWidth(lw);
-  doc.rect(x,y,w,h,'S');
-}
-
-function setColor(doc,hex) {
-  doc.setTextColor(...hexToRgb(hex));
-}
-
-// Process text through the Arabic shaper before passing to jsPDF
-function arText(text) {
-  if (!text) return '';
-  return ArabicShaper.processLine(String(text));
-}
-
-// Wrap text into lines that fit maxWidth (mm)
-function wrapText(doc, text, maxWidth, fontSize) {
-  if (!text) return [''];
-  const lines = [];
-  String(text).split('\n').forEach(para => {
-    if (!para.trim()) { lines.push(''); return; }
-    const words = para.split(/\s+/);
-    let line = '';
-    words.forEach(word => {
-      const test = line ? line + ' ' + word : word;
-      // Measure the SHAPED version
-      const shaped = arText(test);
-      const w = doc.getStringUnitWidth(shaped) * fontSize / doc.internal.scaleFactor;
-      if (w > maxWidth && line) {
-        lines.push(line);
-        line = word;
-      } else {
-        line = test;
+        // URL widgets
+        clonedDoc.querySelectorAll('.url-widget').forEach(wgt=>{
+          const inp=wgt.querySelector('.url-inp');
+          const disp=wgt.querySelector('.url-display');
+          if(inp) inp.style.display='none';
+          if(!disp||disp.style.display!=='flex'){ wgt.style.display='none'; return; }
+          disp.style.cssText='display:flex;align-items:center;gap:4px;padding:3px 6px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:4px;text-decoration:none;width:100%;';
+          const lbl=disp.querySelector('.url-label');
+          if(lbl) lbl.style.cssText='flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:left;font-size:10px;color:#0066cc;text-decoration:underline;';
+          const icon=disp.querySelector('.url-icon');
+          if(icon) icon.style.cssText='font-size:11px;flex-shrink:0;';
+          const edit=disp.querySelector('.url-edit');
+          if(edit) edit.style.display='none'; // hide "تعديل" in PDF
+        });
       }
     });
-    if (line) lines.push(line);
-  });
-  return lines.length ? lines : [''];
-}
 
-// Draw centred shaped Arabic text in a box
-function drawCentre(doc, text, x, y, w, h, fontSize) {
-  doc.setFontSize(fontSize);
-  const shaped = arText(text);
-  const tw = doc.getStringUnitWidth(shaped) * fontSize / doc.internal.scaleFactor;
-  doc.text(shaped, x + (w - tw) / 2, y + h / 2 + fontSize * 0.35 / doc.internal.scaleFactor);
-}
+    const imgData=canvas.toDataURL('image/jpeg',0.96);
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
+    const PW=doc.internal.pageSize.getWidth();   // 841.89
+    const PH=doc.internal.pageSize.getHeight();  // 595.28
 
-// Draw right-aligned wrapped text inside a cell, returns y after last line
-function drawWrapped(doc, text, cx, cy, cw, ch, fontSize, pad = 2) {
-  if (!text) return cy + ch;
-  doc.setFontSize(fontSize);
-  const maxW = cw - pad * 2;
-  const lineH = fontSize * 0.5;
-  const lines = wrapText(doc, text, maxW, fontSize);
-  let ty = cy + lineH + 1;
-  lines.forEach(line => {
-    const shaped = arText(line);
-    const tw = doc.getStringUnitWidth(shaped) * fontSize / doc.internal.scaleFactor;
-    // Right-align: text starts from right edge minus padding
-    doc.text(shaped, cx + cw - tw - pad, ty);
-    ty += lineH;
-  });
-  return ty;
-}
+    // Fill page edge-to-edge
+    doc.addImage(imgData,'JPEG',0,0,PW,PH);
 
-// Measure height for wrapped text
-function measureHeight(doc, text, cw, fontSize, pad = 2) {
-  if (!text) return 0;
-  doc.setFontSize(fontSize);
-  const maxW = cw - pad * 2;
-  const lineH = fontSize * 0.5;
-  const lines = wrapText(doc, text, maxW, fontSize);
-  return lines.length * lineH + 2;
-}
+    // ── Link annotations ──────────────────────────────────────────────────────
+    // Map from DOM layout (at live width) → clone layout (A4_W_PX wide) → PDF pts
+    // Use offsetTop/Left relative to tplWrap — scroll-independent, no viewport bias
+    const liveW=wrap.offsetWidth;
+    const liveH=wrap.offsetHeight;
+    // Scale factors: live DOM px → clone px → PDF pt
+    const scaleX=(A4_W_PX/liveW)*(PW/A4_W_PX);  // simplifies to PW/liveW
+    const scaleY=(A4_H_PX/liveH)*(PH/A4_H_PX);  // simplifies to PH/liveH
 
+    function addLink(domEl, url){
+      if(!domEl||!url) return;
+      const pos=offsetRelTo(domEl, wrap);
+      const pdfX=pos.left*scaleX;
+      const pdfY=pos.top*scaleY;
+      const pdfW=domEl.offsetWidth*scaleX;
+      const pdfH=Math.max(domEl.offsetHeight*scaleY, 12);
+      doc.link(pdfX, pdfY, pdfW, pdfH, {url});
+    }
 
-// ─── MAIN EXPORT ─────────────────────────────────────────────────────────────
+    wrap.querySelectorAll('.url-display').forEach(a=>{
+      if(a.style.display==='flex'){
+        const url=a.href;
+        if(url&&url!=='#'&&!url.endsWith('#')) addLink(a,url);
+      }
+    });
 
-async function handleExport() {
-  const name = document.getElementById('studentName').value.trim();
-  if (!name) {
-    const inp = document.getElementById('studentName');
-    inp.classList.add('err');
-    setTimeout(() => inp.classList.remove('err'), 1200);
-    showToast('الرجاء إدخال اسم الطالب', 'error');
-    return;
+    doc.save('خطة-شهرية-'+name.replace(/\s+/g,'-')+'.pdf');
+    showToast('تم التصدير بنجاح','success');
+
+  }catch(err){
+    console.error('Export error:',err);
+    showToast('حدث خطأ أثناء التصدير','error');
   }
 
-  const btns = [document.getElementById('exportBtn'), document.getElementById('exportBtn2')];
-  btns.forEach(b => { b.disabled = true; b.innerHTML = '<span class="spin"></span> جارٍ الإنشاء…'; });
-
-  try {
-    showToast('جارٍ تحميل الخط العربي…', 'success');
-    const fontOk = await loadFont();
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-    const PW = doc.internal.pageSize.getWidth();   // 297
-    const PH = doc.internal.pageSize.getHeight();  // 210
-
-    // Register font
-    if (fontOk) {
-      doc.addFileToVFS('Cairo-Bold.ttf', fontBase64);
-      doc.addFont('Cairo-Bold.ttf', 'Cairo', 'normal');
-      doc.setFont('Cairo', 'normal');
-    }
-
-    const M = 6;
-    const docW = PW - M * 2;
-
-    const C = {
-      navy:'#1a3a6b', navyDark:'#102951', navyLight:'#2e5da8',
-      yellow:'#f5c518', orange:'#f7941d', red:'#c0392b',
-      white:'#ffffff', border:'#c5d5e8', bg:'#eef3fa', text:'#1a2840',
-      cellBg:'#f7faff', blueRow:'#3b82cc',
-    };
-
-    let curY = M;
-
-    // ─── HEADER ─────────────────────────────────────────────────────────
-    const headerH = 22;
-    const logoW = 52;
-
-    fillRect(doc, M, curY, logoW, headerH, C.cellBg);
-    strokeRect(doc, M, curY, logoW, headerH, C.border, 0.3);
-    setColor(doc, C.navy);
-    doc.setFontSize(14);
-    drawCentre(doc, 'iLearn', M, curY, logoW, headerH, 14);
-
-    // Info fields
-    const infoX = M + logoW;
-    const infoW = docW - logoW;
-    const fields = [
-      { label: 'اسم الطالب', val: name },
-      { label: 'الشهر', val: document.getElementById('month').value || '—' },
-      { label: 'المادة', val: document.getElementById('subject').value || '—' },
-      { label: 'الصف', val: 'الصف ' + document.getElementById('grade').value },
-      { label: 'السنة', val: document.getElementById('year').value || '—' },
-    ];
-    const fw = infoW / fields.length;
-    fields.forEach((f, i) => {
-      const fx = infoX + i * fw;
-      // Label
-      fillRect(doc, fx, curY, fw, 8, C.navy);
-      setColor(doc, '#ffffff');
-      drawCentre(doc, f.label, fx, curY, fw, 8, 7.5);
-      // Value
-      fillRect(doc, fx, curY + 8, fw, headerH - 8, C.white);
-      setColor(doc, C.red);
-      drawCentre(doc, f.val, fx, curY + 8, fw, headerH - 8, 9);
-      strokeRect(doc, fx, curY, fw, headerH, C.border, 0.25);
-    });
-    strokeRect(doc, M, curY, docW, headerH, C.border, 0.4);
-    curY += headerH;
-
-    // ─── TITLE BAR ──────────────────────────────────────────────────────
-    const titleH = 9;
-    fillRect(doc, M, curY, docW, titleH, C.navy);
-    setColor(doc, '#ffffff');
-    drawCentre(doc, 'الخطة الشهرية', M, curY, docW, titleH, 13);
-    curY += titleH;
-
-    // ─── TABLE HEADER ───────────────────────────────────────────────────
-    const colWeek = 18, colLesson = 17;
-    const colRemain = docW - colWeek - colLesson;
-    const colContent = colRemain * 0.31;
-    const colOutcomes = colRemain * 0.37;
-    const colHW = colRemain - colContent - colOutcomes;
-
-    const thH = 8;
-    const cols = [
-      { label: 'الجدول الزمني', w: colWeek + colLesson, x: M },
-      { label: 'المحتوى', w: colContent, x: M + colWeek + colLesson },
-      { label: 'نواتج التعلم', w: colOutcomes, x: M + colWeek + colLesson + colContent },
-      { label: 'الواجب المنزلي', w: colHW, x: M + colWeek + colLesson + colContent + colOutcomes },
-    ];
-    cols.forEach(c => {
-      fillRect(doc, c.x, curY, c.w, thH, C.cellBg);
-      setColor(doc, C.blueRow);
-      drawCentre(doc, c.label, c.x, curY, c.w, thH, 8);
-      strokeRect(doc, c.x, curY, c.w, thH, C.border, 0.3);
-    });
-    curY += thH;
-
-    // ─── TABLE ROWS ─────────────────────────────────────────────────────
-    const FS = 8;
-    const PAD = 2;
-
-    for (let w = 1; w <= 4; w++) {
-      const rowHeights = [];
-      for (let l = 1; l <= 2; l++) {
-        const idx = (w - 1) * 2 + (l - 1);
-        const r = grid[idx];
-        const hC = measureHeight(doc, r.content, colContent, FS, PAD);
-        const hO = measureHeight(doc, r.outcomes, colOutcomes, FS, PAD);
-        let hH = measureHeight(doc, r.homework, colHW, FS, PAD);
-        if (r.homeworkFile) hH += 5;
-        rowHeights.push(Math.max(hC, hO, hH, 10));
-      }
-
-      const weekH = rowHeights[0] + rowHeights[1];
-
-      // Week cell
-      fillRect(doc, M, curY, colWeek, weekH, C.cellBg);
-      setColor(doc, C.navy);
-      drawCentre(doc, 'الأسبوع ' + w, M, curY, colWeek, weekH, 8);
-      strokeRect(doc, M, curY, colWeek, weekH, C.border, 0.3);
-
-      const lessonX = M + colWeek;
-      const contentX = lessonX + colLesson;
-      const outcomesX = contentX + colContent;
-      const hwX = outcomesX + colOutcomes;
-
-      let lessonY = curY;
-      for (let l = 1; l <= 2; l++) {
-        const idx = (w - 1) * 2 + (l - 1);
-        const r = grid[idx];
-        const rh = rowHeights[l - 1];
-
-        // Lesson cell
-        fillRect(doc, lessonX, lessonY, colLesson, rh, C.white);
-        setColor(doc, C.text);
-        drawCentre(doc, 'الدرس ' + l, lessonX, lessonY, colLesson, rh, 7.5);
-        strokeRect(doc, lessonX, lessonY, colLesson, rh, C.border, 0.3);
-
-        // Content
-        fillRect(doc, contentX, lessonY, colContent, rh, C.white);
-        setColor(doc, C.text);
-        drawWrapped(doc, r.content, contentX, lessonY, colContent, rh, FS, PAD);
-        strokeRect(doc, contentX, lessonY, colContent, rh, C.border, 0.3);
-
-        // Outcomes
-        fillRect(doc, outcomesX, lessonY, colOutcomes, rh, C.white);
-        setColor(doc, C.text);
-        drawWrapped(doc, r.outcomes, outcomesX, lessonY, colOutcomes, rh, FS, PAD);
-        strokeRect(doc, outcomesX, lessonY, colOutcomes, rh, C.border, 0.3);
-
-        // Homework
-        fillRect(doc, hwX, lessonY, colHW, rh, C.white);
-        setColor(doc, C.text);
-        const hwEndY = drawWrapped(doc, r.homework, hwX, lessonY, colHW, rh, FS, PAD);
-        if (r.homeworkFile) {
-          fillRect(doc, hwX + 1, hwEndY, colHW - 2, 4.5, '#dcfce7');
-          doc.setDrawColor(22, 163, 74);
-          doc.setLineWidth(0.25);
-          doc.rect(hwX + 1, hwEndY, colHW - 2, 4.5, 'S');
-          setColor(doc, '#14532d');
-          const fn = r.homeworkFile.name.length > 28 ? r.homeworkFile.name.slice(0, 25) + '…' : r.homeworkFile.name;
-          drawCentre(doc, fn, hwX + 1, hwEndY, colHW - 2, 4.5, 6.5);
-        }
-        strokeRect(doc, hwX, lessonY, colHW, rh, C.border, 0.3);
-
-        lessonY += rh;
-      }
-      curY += weekH;
-    }
-
-    // ─── ASSESSMENT ─────────────────────────────────────────────────────
-    const assessTxt = document.getElementById('assessment').value || '';
-    const assessBarH = 7;
-    fillRect(doc, M, curY, docW, assessBarH, C.yellow);
-    setColor(doc, C.navyDark);
-    drawCentre(doc, 'التقييم', M, curY, docW, assessBarH, 10);
-    curY += assessBarH;
-
-    const assessBodyH = Math.max(measureHeight(doc, assessTxt, docW, 8.5, 3) + 4, 14);
-    fillRect(doc, M, curY, docW, assessBodyH, C.white);
-    strokeRect(doc, M, curY, docW, assessBodyH, C.border, 0.3);
-    setColor(doc, C.text);
-    drawWrapped(doc, assessTxt, M, curY, docW, assessBodyH, 8.5, 3);
-    curY += assessBodyH;
-
-    // ─── FOOTER ─────────────────────────────────────────────────────────
-    const footerH = 10;
-    fillRect(doc, M, curY, docW, footerH, C.white);
-    strokeRect(doc, M, curY, docW, footerH, C.border, 0.4);
-    setColor(doc, C.navyDark);
-    drawCentre(doc, 'www.ilearn-eg.com', M, curY, docW, footerH, 7.5);
-
-    // Outer border
-    strokeRect(doc, M, M, docW, PH - M * 2, C.border, 0.5);
-
-    // Attachments
-    grid.filter(r => r.homeworkFile).forEach(r => {
-      try {
-        doc.attach(r.homeworkFile.base64, r.homeworkFile.name, 'واجب');
-      } catch (e) { console.warn('attach failed', e); }
-    });
-
-    // Save
-    const monthVal = document.getElementById('month').value;
-    const yearVal = document.getElementById('year').value;
-    const fn = slug('خطة-شهرية') + '-' + slug(name || 'طالب') + '-' + slug(monthVal) + '-' + yearVal + '.pdf';
-    doc.save(fn);
-
-    const attached = grid.filter(r => r.homeworkFile).length;
-    showToast(attached ? `✓ تم التنزيل — ${attached} ملف مرفق` : '✓ تم تنزيل الملف بنجاح!', 'success');
-
-  } catch (err) {
-    console.error(err);
-    showToast('فشل التصدير — راجع وحدة التحكم', 'error');
-  }
-
-  btns.forEach(b => { b.disabled = false; b.innerHTML = '↓ تصدير PDF'; });
+  btns.forEach(b=>{b.disabled=false;b.innerHTML='&#x2193; تصدير PDF';});
 }
 </script>
 </body>
