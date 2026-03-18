@@ -589,16 +589,24 @@ async function handleExport(){
   const btns=[document.getElementById('exportBtn'),document.getElementById('exportBtn2')];
   btns.forEach(b=>{b.disabled=true;b.innerHTML='<span class="spin"></span> جارٍ الإنشاء…';});
 
-  // A4 landscape in PDF points
   const A4_W_PT=841.89, A4_H_PT=595.28;
-  // Render width — matches A4 landscape pixel equivalent at 96dpi
   const RENDER_W=1123;
+
+  // Measure offsetTop/offsetLeft relative to ancestor — scroll-independent
+  function offsetRelTo(el, ancestor){
+    let top=0, left=0;
+    while(el && el!==ancestor){
+      top  += el.offsetTop;
+      left += el.offsetLeft;
+      el    = el.offsetParent;
+    }
+    return {top, left};
+  }
 
   try{
     const wrap=document.getElementById('tplWrap');
 
-    // ── Step 1: inject compact CSS into the LIVE page ─────────────────────────
-    // This makes the live DOM layout identical to what html2canvas will capture.
+    // ── 1. Apply compact CSS to live DOM ─────────────────────────────────────
     const compactStyle=document.createElement('style');
     compactStyle.id='__pdf_compact__';
     compactStyle.textContent=`
@@ -621,43 +629,42 @@ async function handleExport(){
     `;
     document.head.appendChild(compactStyle);
 
-    // ── Step 2: force wrap to exactly RENDER_W so layout matches canvas ───────
+    // ── 2. Force wrap to RENDER_W so layout equals what canvas will capture ───
     const origStyle=wrap.style.cssText;
     wrap.style.cssText=origStyle+
       ';width:'+RENDER_W+'px!important'+
       ';min-width:'+RENDER_W+'px!important'+
       ';max-width:'+RENDER_W+'px!important';
 
-    // Force reflow so getBoundingClientRect is accurate
+    // Force reflow
     void wrap.offsetHeight;
 
-    // ── Step 3: measure link positions in px relative to wrap top-left ────────
+    // ── 3. Measure links using offsetRelTo — purely layout-based, no scroll ───
     const linkData=[];
-    const wrapRect=wrap.getBoundingClientRect();
 
-    function recordLink(el,url){
+    function recordLink(el, url){
       if(!el||!url||url==='#'||url.endsWith('#')) return;
-      const r=el.getBoundingClientRect();
+      const pos=offsetRelTo(el, wrap);
       linkData.push({
-        x: r.left-wrapRect.left,
-        y: r.top -wrapRect.top,
-        w: r.width,
-        h: r.height,
+        x: pos.left,
+        y: pos.top,
+        w: el.offsetWidth,
+        h: el.offsetHeight,
         url
       });
     }
 
     wrap.querySelectorAll('.hw-link-anchor').forEach(a=>{
       const disp=a.closest('.hw-link-disp');
-      if(disp&&disp.style.display==='flex'&&a.href&&!a.href.endsWith('#'))
-        recordLink(a,a.href);
+      if(disp && disp.style.display==='flex' && a.href && !a.href.endsWith('#'))
+        recordLink(a, a.href);
     });
     wrap.querySelectorAll('.url-display').forEach(a=>{
-      if(a.style.display==='flex'&&a.href&&!a.href.endsWith('#'))
-        recordLink(a,a.href);
+      if(a.style.display==='flex' && a.href && !a.href.endsWith('#'))
+        recordLink(a, a.href);
     });
 
-    // ── Step 4: capture — onclone just cleans up interactive elements ─────────
+    // ── 4. Capture canvas ─────────────────────────────────────────────────────
     const canvas=await html2canvas(wrap,{
       scale:2,
       useCORS:true,
@@ -666,9 +673,7 @@ async function handleExport(){
       logging:false,
       windowWidth:RENDER_W,
       width:RENDER_W,
-      onclone(clonedDoc,clonedEl){
-        // The compact CSS is already baked in (html2canvas clones the stylesheet).
-        // Just ensure size and overflow.
+      onclone(clonedDoc, clonedEl){
         clonedEl.style.cssText+=(
           ';width:'+RENDER_W+'px!important'+
           ';min-width:'+RENDER_W+'px!important'+
@@ -676,25 +681,16 @@ async function handleExport(){
           ';height:auto!important'+
           ';overflow:visible!important'
         );
-
-        // Textareas → static divs (html2canvas cannot render textarea value)
+        // Textareas → divs
         clonedDoc.querySelectorAll('textarea').forEach(ta=>{
           const div=clonedDoc.createElement('div');
           div.style.cssText='font-family:Cairo,sans-serif;font-size:9px;font-weight:600;color:#1a2840;line-height:1.3;white-space:pre-wrap;word-break:break-word;width:100%;padding:0;direction:rtl;text-align:right;background:transparent;';
           div.textContent=ta.value;
           ta.parentNode.replaceChild(div,ta);
         });
-
-        // Hide homework URL inputs (show chips only if active)
+        // Hide URL inputs, edit buttons
         clonedDoc.querySelectorAll('.hw-url-inp').forEach(i=>i.style.display='none');
-        clonedDoc.querySelectorAll('.hw-link-disp').forEach(disp=>{
-          if(disp.style.display==='flex'){
-            const eb=disp.querySelector('.hw-edit-btn');
-            if(eb) eb.style.display='none';
-          }
-        });
-
-        // Assessment url-widget
+        clonedDoc.querySelectorAll('.hw-edit-btn').forEach(i=>i.style.display='none');
         clonedDoc.querySelectorAll('.url-widget').forEach(wgt=>{
           const inp=wgt.querySelector('.url-inp');
           const disp=wgt.querySelector('.url-display');
@@ -706,38 +702,36 @@ async function handleExport(){
       }
     });
 
-    // ── Step 5: restore live DOM ───────────────────────────────────────────────
+    // ── 5. Restore live DOM ───────────────────────────────────────────────────
     wrap.style.cssText=origStyle;
     document.head.removeChild(compactStyle);
 
-    // ── Step 6: build PDF ──────────────────────────────────────────────────────
-    // canvas was captured at RENDER_W × naturalH px (scale=2 so divide by 2)
-    const naturalW=canvas.width/2;   // should equal RENDER_W
-    const naturalH=canvas.height/2;
+    // ── 6. Compute PDF dimensions ─────────────────────────────────────────────
+    // canvas captured at RENDER_W px wide (scale=2, so canvas.width = RENDER_W*2)
+    const naturalW = canvas.width  / 2;   // = RENDER_W
+    const naturalH = canvas.height / 2;   // = actual layout height in px
 
-    // Scale to fill A4 landscape width exactly; height follows proportionally
-    const ratio=A4_W_PT/naturalW;
-    const imgW=A4_W_PT;
-    const imgH=naturalH*ratio;
-    // Vertically center if content is shorter than A4; start at top if taller
-    const offY=imgH<A4_H_PT?(A4_H_PT-imgH)/2:0;
+    // ratio: 1 DOM px → this many PDF points
+    const ratio = A4_W_PT / naturalW;     // same as A4_W_PT / RENDER_W
+    const imgW  = A4_W_PT;
+    const imgH  = naturalH * ratio;
+    const offY  = imgH < A4_H_PT ? (A4_H_PT - imgH) / 2 : 0;
 
     const imgData=canvas.toDataURL('image/jpeg',0.97);
     const{jsPDF}=window.jspdf;
     const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
-    doc.addImage(imgData,'JPEG',0,offY,imgW,imgH);
+    doc.addImage(imgData,'JPEG', 0, offY, imgW, imgH);
 
-    // ── Step 7: annotate links ─────────────────────────────────────────────────
-    // Links were measured in px at RENDER_W width.
-    // Canvas was captured at naturalW (≈RENDER_W) width.
-    // PDF image fills exactly A4_W_PT points wide, starting at x=0.
-    // Therefore: pdfCoord = domCoord_px * ratio  (+offY for Y axis)
+    // ── 7. Add clickable link annotations ─────────────────────────────────────
+    // linkData coords are in DOM px at RENDER_W width.
+    // PDF image is at x=0, y=offY, width=imgW=A4_W_PT.
+    // One px = ratio pt. Simple linear mapping.
     linkData.forEach(({x,y,w,h,url})=>{
       doc.link(
-        x*ratio,
-        offY + y*ratio,
-        Math.max(w*ratio,30),
-        Math.max(h*ratio,10),
+        x * ratio,
+        offY + y * ratio,
+        Math.max(w * ratio, 30),
+        Math.max(h * ratio, 10),
         {url}
       );
     });
@@ -746,7 +740,6 @@ async function handleExport(){
     showToast('تم التصدير بنجاح','success');
 
   }catch(err){
-    // Always clean up even on error
     const s=document.getElementById('__pdf_compact__');
     if(s) s.remove();
     console.error('Export error:',err);
