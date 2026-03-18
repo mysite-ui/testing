@@ -574,19 +574,22 @@ async function handleExport(){
   const A4_W_PT=841.89, A4_H_PT=595.28;
   const RENDER_W=1123;
 
-  // Offscreen sandbox — position:absolute so it participates in document flow
-  // and browser gives correct offsetHeight/scrollHeight for the full content.
-  // position:fixed would clip height to the viewport — that's the bug.
+  // Sandbox: fixed position, but VISIBLE and at top:0 left:0 so html2canvas
+  // can fully paint it. We push it off-screen with a negative margin trick
+  // via a clipping wrapper so the user never sees it flash.
+  const clipper=document.createElement('div');
+  clipper.style.cssText='position:fixed;top:0;left:0;width:0;height:0;overflow:hidden;z-index:-9999;';
   const sandbox=document.createElement('div');
   sandbox.style.cssText=[
     'position:absolute',
     'top:0',
-    'left:-9999px',
+    'left:0',
     'width:'+RENDER_W+'px',
-    'overflow:visible',
-    'visibility:hidden',
-    'pointer-events:none'
+    'background:#fff',
+    'overflow:visible'
   ].join(';');
+  clipper.appendChild(sandbox);
+  document.body.appendChild(clipper);
   document.body.appendChild(sandbox);
 
   try{
@@ -729,7 +732,10 @@ async function handleExport(){
     const aLink=clone.querySelector('.__pdf_assess_link__');
     if(aLink) recordEl(aLink, aLink.dataset.url);
 
-    // ── 4. Capture full clone (no scroll, no viewport clipping) ──────────────
+    // ── 4. Capture full clone ─────────────────────────────────────────────────
+    // Target the clone directly. Do NOT pass height — let html2canvas measure
+    // the element's natural scrollHeight internally. Passing an explicit height
+    // that's wrong causes blank output.
     const canvas=await html2canvas(clone,{
       scale:2,
       useCORS:true,
@@ -737,14 +743,12 @@ async function handleExport(){
       backgroundColor:'#ffffff',
       logging:false,
       windowWidth:RENDER_W,
-      width:RENDER_W,
-      height:fullHeight,   // ← full measured height, not viewport
       scrollX:0,
       scrollY:0
     });
 
     // ── 5. Teardown sandbox ───────────────────────────────────────────────────
-    document.body.removeChild(sandbox);
+    document.body.removeChild(clipper);
 
     // ── 6. PDF dimensions ─────────────────────────────────────────────────────
     const naturalW=canvas.width /2;
@@ -768,7 +772,7 @@ async function handleExport(){
     showToast('تم التصدير بنجاح','success');
 
   }catch(err){
-    if(sandbox.parentNode) document.body.removeChild(sandbox);
+    if(clipper.parentNode) document.body.removeChild(clipper);
     console.error('Export error:',err);
     showToast('حدث خطأ أثناء التصدير','error');
   }
