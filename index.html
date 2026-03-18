@@ -574,79 +574,159 @@ async function handleExport(){
   const A4_W_PT=841.89, A4_H_PT=595.28;
   const RENDER_W=1123;
 
+  // Offscreen sandbox — position it far off-screen so it never affects layout
+  // but is still "in the document" so html2canvas can measure it fully.
+  const sandbox=document.createElement('div');
+  sandbox.style.cssText=[
+    'position:fixed',
+    'top:0','left:-9999px',
+    'width:'+RENDER_W+'px',
+    'overflow:visible',
+    'z-index:-1',
+    'background:#fff',
+    'pointer-events:none'
+  ].join(';');
+  document.body.appendChild(sandbox);
+
   try{
-    const wrap=document.getElementById('tplWrap');
+    const srcWrap=document.getElementById('tplWrap');
 
-    // ── 1. Compact CSS ────────────────────────────────────────────────────────
-    const compactStyle=document.createElement('style');
-    compactStyle.id='__pdf_compact__';
-    compactStyle.textContent=`
-      #tplWrap .tpl-grid td,#tplWrap .tpl-grid th{padding:3px 5px!important;font-size:9px!important;line-height:1.3!important;}
-      #tplWrap .week-cell{font-size:9px!important;padding:3px 2px!important;}
-      #tplWrap .lesson-cell{font-size:9px!important;padding:3px 2px!important;}
-      #tplWrap .input-cell{padding:3px 6px!important;}
-      #tplWrap .tpl-header{min-height:60px!important;}
-      #tplWrap .tpl-logo-cell{min-height:60px!important;padding:4px 10px!important;}
-      #tplWrap .info-label{font-size:8px!important;padding:3px 2px!important;}
-      #tplWrap .info-value{font-size:10px!important;padding:4px!important;min-height:32px!important;}
-      #tplWrap .tpl-title-bar{font-size:13px!important;padding:6px!important;}
-      #tplWrap .tpl-assess-bar{font-size:11px!important;padding:5px!important;}
-      #tplWrap .tpl-assess-body{padding:5px 10px!important;min-height:40px!important;}
-      #tplWrap .tpl-footer{padding:4px 12px!important;min-height:44px!important;}
-      #tplWrap .tpl-grid-wrap{overflow:visible!important;}
-      #tplWrap .hw-link-disp{padding:2px 5px!important;margin-top:2px!important;}
-      #tplWrap .hw-link-anchor{font-size:9px!important;}
-      #tplWrap textarea{font-size:9px!important;line-height:1.3!important;min-height:0!important;}
-    `;
-    document.head.appendChild(compactStyle);
+    // ── 1. Build a clean render clone inside the sandbox ──────────────────────
+    const clone=document.createElement('div');
+    clone.style.cssText=[
+      'width:'+RENDER_W+'px',
+      'font-family:Cairo,sans-serif',
+      'direction:rtl',
+      'background:#fff',
+      'overflow:visible'
+    ].join(';');
 
-    // ── 2. Fix wrap width ────────────────────────────────────────────────────
-    const origStyle=wrap.style.cssText;
-    wrap.style.cssText=origStyle+
-      ';width:'+RENDER_W+'px!important'+
-      ';min-width:'+RENDER_W+'px!important'+
-      ';max-width:'+RENDER_W+'px!important';
+    // Collect data from live DOM
+    const assessText  = document.getElementById('assessment').value;
+    const assessDisp  = document.querySelector('#assessUrlWidget .url-display');
+    const assessUrl   = (assessDisp && assessDisp.style.display==='flex' &&
+                         assessDisp.href && !assessDisp.href.endsWith('#'))
+                        ? assessDisp.href : '';
 
-    // Force reflow so layout settles before we measure
-    void wrap.offsetHeight;
+    // Build compact inline HTML — no textareas, no inputs, no hidden junk.
+    // This avoids every html2canvas textarea-clipping and overflow issue.
+    let rowsHtml='';
+    for(let w=1;w<=4;w++){
+      for(let l=1;l<=2;l++){
+        const idx=(w-1)*2+(l-1);
+        const item=grid[idx];
+        const hwDisp=srcWrap.querySelectorAll('.hw-link-disp')[idx];
+        const hasHwLink=(hwDisp && hwDisp.style.display==='flex' &&
+                         item.homeworkUrl && item.homeworkUrl!=='#');
 
-    // ── 3. Collect link rects AFTER reflow, relative to wrap ─────────────────
-    // FIX: Use getBoundingClientRect diff (scroll-independent, post-reflow accurate)
-    // instead of offsetParent chain which can be thrown off by transforms/position.
-    const wrapRect = wrap.getBoundingClientRect();
-    const linkData = [];
+        const weekCell=l===1
+          ? `<td rowspan="2" style="background:#f7faff;color:#1a3a6b;font-weight:900;font-size:9px;text-align:center;vertical-align:middle;padding:3px 2px;border:1px solid #c5d5e8;width:68px;">الأسبوع ${w}</td>`
+          : '';
+        const hwContent=hasHwLink
+          ? `<div style="display:flex;align-items:center;gap:4px;padding:2px 5px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:4px;margin-top:2px;">
+               <span style="font-size:11px;">🔗</span>
+               <span class="__pdf_hw_link__" data-url="${escHtml(item.homeworkUrl)}" style="font-family:Cairo,sans-serif;font-size:9px;font-weight:700;color:#0066cc;text-decoration:underline;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl;text-align:right;">${escHtml(item.homeworkText||item.homeworkUrl)}</span>
+             </div>`
+          : `<div style="font-family:Cairo,sans-serif;font-size:9px;font-weight:600;color:#1a2840;white-space:pre-wrap;word-break:break-word;line-height:1.3;direction:rtl;text-align:right;">${escHtml(item.homeworkText)}</div>`;
 
-    function recordLinkEl(el, url){
-      if(!el || !url || url==='#' || url.endsWith('#')) return;
-      const r = el.getBoundingClientRect();
-      // coords relative to wrap top-left, in screen px
-      // then we divide by devicePixelRatio-independent layout px
+        rowsHtml+=`<tr>
+          ${weekCell}
+          <td style="background:#fff;color:#1a2840;font-size:9px;font-weight:700;text-align:center;vertical-align:middle;padding:3px 2px;border:1px solid #c5d5e8;width:62px;">الدرس ${l}</td>
+          <td style="background:#fff;vertical-align:top;padding:3px 6px;border:1px solid #c5d5e8;">
+            <div style="font-family:Cairo,sans-serif;font-size:9px;font-weight:600;color:#1a2840;white-space:pre-wrap;word-break:break-word;line-height:1.3;direction:rtl;text-align:right;">${escHtml(item.content)}</div>
+          </td>
+          <td style="background:#fff;vertical-align:top;padding:3px 6px;border:1px solid #c5d5e8;">
+            <div style="font-family:Cairo,sans-serif;font-size:9px;font-weight:600;color:#1a2840;white-space:pre-wrap;word-break:break-word;line-height:1.3;direction:rtl;text-align:right;">${escHtml(item.outcomes)}</div>
+          </td>
+          <td style="background:#fff;vertical-align:top;padding:3px 6px;border:1px solid #c5d5e8;">${hwContent}</td>
+        </tr>`;
+      }
+    }
+
+    const assessLinkHtml=assessUrl
+      ? `<div class="__pdf_assess_link__" data-url="${escHtml(assessUrl)}" style="display:flex;align-items:center;gap:5px;padding:4px 8px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:5px;margin-top:4px;">
+           <span style="font-size:13px;">🔗</span>
+           <span style="font-family:Cairo,sans-serif;font-size:11px;color:#0066cc;text-decoration:underline;direction:ltr;text-align:left;">${escHtml(assessUrl)}</span>
+         </div>`
+      : '';
+
+    // Grab logo src from live page
+    const logoSrc  = document.getElementById('headerLogo').src;
+    const footerSrc= document.getElementById('footerContact').src;
+
+    clone.innerHTML=`
+    <div style="display:grid;grid-template-columns:220px 1fr;border-bottom:2px solid #c5d5e8;min-height:60px;">
+      <div style="padding:4px 10px;display:flex;align-items:center;justify-content:center;border-left:1.5px solid #c5d5e8;background:#f7faff;min-height:60px;">
+        <img src="${logoSrc}" style="max-width:180px;max-height:55px;width:auto;height:auto;object-fit:contain;display:block;" crossorigin="anonymous"/>
+      </div>
+      <div style="display:flex;flex-direction:column;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;height:100%;">
+          ${[
+            ['اسم الطالب', document.getElementById('preview-name').textContent],
+            ['الشهر',      document.getElementById('preview-month').textContent],
+            ['المادة',     document.getElementById('preview-subject').textContent],
+            ['الصف',       document.getElementById('preview-grade').textContent]
+          ].map(([label,val],i,arr)=>`
+            <div style="display:flex;flex-direction:column;${i<arr.length-1?'border-left:1.5px solid #c5d5e8':''}">
+              <div style="background:#1a3a6b;color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:3px 2px;text-align:center;">${label}</div>
+              <div style="background:#fff;display:flex;align-items:center;justify-content:center;padding:4px;font-size:10px;font-weight:800;color:#c0392b;flex:1;text-align:center;min-height:32px;">${escHtml(val)}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div style="background:#1a3a6b;color:#fff;text-align:center;font-size:13px;font-weight:900;padding:6px;">الخطة الشهرية</div>
+    <div style="width:100%;overflow:visible;">
+      <table style="width:100%;border-collapse:collapse;font-size:9px;table-layout:fixed;direction:rtl;">
+        <colgroup><col style="width:68px"/><col style="width:62px"/><col/><col/><col/></colgroup>
+        <thead>
+          <tr>
+            <th colspan="2" style="background:#f7faff;color:#3b82cc;font-weight:800;font-size:9px;text-align:center;padding:5px 4px;border:1.5px solid #c5d5e8;">الجدول الزمني</th>
+            <th style="background:#f7faff;color:#3b82cc;font-weight:800;font-size:9px;text-align:center;padding:5px 4px;border:1.5px solid #c5d5e8;width:28%;">المحتوى</th>
+            <th style="background:#f7faff;color:#3b82cc;font-weight:800;font-size:9px;text-align:center;padding:5px 4px;border:1.5px solid #c5d5e8;width:30%;">نواتج التعلم</th>
+            <th style="background:#f7faff;color:#3b82cc;font-weight:800;font-size:9px;text-align:center;padding:5px 4px;border:1.5px solid #c5d5e8;width:22%;">الواجب المنزلي</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    </div>
+    <div style="background:#f5c518;color:#102951;font-size:11px;font-weight:900;text-align:center;padding:5px;">التقييم</div>
+    <div style="padding:5px 10px;min-height:40px;border-top:1px solid #c5d5e8;overflow:visible;">
+      <div style="font-family:Cairo,sans-serif;font-size:9px;font-weight:600;color:#1a2840;white-space:pre-wrap;word-break:break-word;line-height:1.4;direction:rtl;text-align:right;">${escHtml(assessText)}</div>
+      ${assessLinkHtml}
+    </div>
+    <div style="background:#fff;border-top:2px solid #c5d5e8;padding:4px 12px;display:flex;align-items:center;justify-content:center;min-height:44px;">
+      <img src="${footerSrc}" style="max-width:100%;max-height:44px;width:auto;height:auto;object-fit:contain;display:block;" crossorigin="anonymous"/>
+    </div>`;
+
+    sandbox.appendChild(clone);
+
+    // ── 2. Wait a frame so images load & layout settles ───────────────────────
+    await new Promise(r=>setTimeout(r,120));
+
+    // ── 3. Collect link positions relative to clone ───────────────────────────
+    const linkData=[];
+    const cloneRect=clone.getBoundingClientRect();
+
+    function recordEl(el,url){
+      if(!el||!url) return;
+      const r=el.getBoundingClientRect();
       linkData.push({
-        x: r.left - wrapRect.left,
-        y: r.top  - wrapRect.top,
-        w: r.width,
-        h: r.height,
+        x: r.left - cloneRect.left,
+        y: r.top  - cloneRect.top,
+        w: r.width  || 120,
+        h: r.height ||  16,
         url
       });
     }
 
-    // Homework links
-    wrap.querySelectorAll('.hw-link-disp').forEach(disp=>{
-      if(disp.style.display !== 'flex') return;
-      const anchor = disp.querySelector('.hw-link-anchor');
-      if(anchor && anchor.href && !anchor.href.endsWith('#'))
-        recordLinkEl(disp, anchor.href);
+    clone.querySelectorAll('.__pdf_hw_link__').forEach(el=>{
+      recordEl(el, el.dataset.url);
     });
+    const aLink=clone.querySelector('.__pdf_assess_link__');
+    if(aLink) recordEl(aLink, aLink.dataset.url);
 
-    // Assessment link
-    const assessDisp = document.querySelector('#assessUrlWidget .url-display');
-    if(assessDisp && assessDisp.style.display === 'flex' &&
-       assessDisp.href && !assessDisp.href.endsWith('#')){
-      recordLinkEl(assessDisp, assessDisp.href);
-    }
-
-    // ── 4. Capture canvas ─────────────────────────────────────────────────────
-    const canvas=await html2canvas(wrap,{
+    // ── 4. Capture full clone (no scroll, no viewport clipping) ──────────────
+    const canvas=await html2canvas(clone,{
       scale:2,
       useCORS:true,
       allowTaint:true,
@@ -654,132 +734,51 @@ async function handleExport(){
       logging:false,
       windowWidth:RENDER_W,
       width:RENDER_W,
-      onclone(clonedDoc, clonedEl){
-        clonedEl.style.cssText+=(
-          ';width:'+RENDER_W+'px!important'+
-          ';min-width:'+RENDER_W+'px!important'+
-          ';max-width:'+RENDER_W+'px!important'+
-          ';height:auto!important'+
-          ';overflow:visible!important'
-        );
-
-        // FIX: Convert textareas → divs while preserving their contribution to
-        // layout height (so assessment section is never clipped/hidden).
-        clonedDoc.querySelectorAll('textarea').forEach(ta=>{
-          const div=clonedDoc.createElement('div');
-          div.style.cssText=[
-            'font-family:Cairo,sans-serif',
-            'font-size:9px',
-            'font-weight:600',
-            'color:#1a2840',
-            'line-height:1.3',
-            'white-space:pre-wrap',
-            'word-break:break-word',
-            'width:100%',
-            'padding:0',
-            'direction:rtl',
-            'text-align:right',
-            'background:transparent',
-            // Ensure the div is always visible and takes up space
-            'display:block',
-            'min-height:1em',
-            'overflow:visible'
-          ].join(';');
-          div.textContent = ta.value;
-          ta.parentNode.replaceChild(div, ta);
-        });
-
-        // FIX: Ensure assessment container and its parent are always visible
-        // regardless of content (fixes disappearing assessment section).
-        const assessBody = clonedDoc.querySelector('.tpl-assess-body');
-        if(assessBody){
-          assessBody.style.cssText += ';display:block!important;overflow:visible!important;min-height:40px!important;';
-        }
-        const assessBar = clonedDoc.querySelector('.tpl-assess-bar');
-        if(assessBar){
-          assessBar.style.cssText += ';display:block!important;';
-        }
-        const assessContainer = clonedDoc.querySelector('.assessment-container');
-        if(assessContainer){
-          assessContainer.style.cssText += ';display:flex!important;flex-direction:column!important;overflow:visible!important;';
-        }
-        const assessTextarea = clonedDoc.querySelector('#assessment');
-        if(assessTextarea){
-          // Already replaced above, but just in case
-          assessTextarea.style.cssText += ';display:block!important;overflow:visible!important;';
-        }
-
-        // Hide URL input fields (edit mode inputs), keep only displayed links
-        clonedDoc.querySelectorAll('.hw-url-inp').forEach(i=>i.style.display='none');
-        clonedDoc.querySelectorAll('.hw-edit-btn').forEach(i=>i.style.display='none');
-
-        // FIX: For url-widget (assessment link), only hide the input,
-        // never hide the whole widget — the textarea replacement above already
-        // handles that the div takes correct space.
-        clonedDoc.querySelectorAll('.url-widget').forEach(wgt=>{
-          const inp  = wgt.querySelector('.url-inp');
-          const disp = wgt.querySelector('.url-display');
-          if(inp) inp.style.display='none';
-          if(disp && disp.style.display==='flex'){
-            // Visible link chip — hide only the edit button
-            const edit=disp.querySelector('.url-edit');
-            if(edit) edit.style.display='none';
-          } else {
-            // No active link — hide the whole widget but keep the space
-            // via an invisible placeholder so layout isn't disrupted
-            wgt.style.visibility='hidden';
-            wgt.style.height='0';
-            wgt.style.margin='0';
-            wgt.style.padding='0';
-            wgt.style.overflow='hidden';
-          }
-        });
-      }
+      height:clone.scrollHeight,   // ← capture FULL height, not viewport
+      scrollX:0,
+      scrollY:0
     });
 
-    // ── 5. Restore live DOM ───────────────────────────────────────────────────
-    wrap.style.cssText=origStyle;
-    document.head.removeChild(compactStyle);
+    // ── 5. Teardown sandbox ───────────────────────────────────────────────────
+    document.body.removeChild(sandbox);
 
-    // ── 6. Compute PDF dimensions ─────────────────────────────────────────────
-    const naturalW = canvas.width  / 2;
-    const naturalH = canvas.height / 2;
-
-    const ratio = A4_W_PT / naturalW;
-    const imgW  = A4_W_PT;
-    const imgH  = naturalH * ratio;
-    const offY  = imgH < A4_H_PT ? (A4_H_PT - imgH) / 2 : 0;
+    // ── 6. PDF dimensions ─────────────────────────────────────────────────────
+    const naturalW=canvas.width /2;
+    const naturalH=canvas.height/2;
+    const ratio=A4_W_PT/naturalW;
+    const imgW=A4_W_PT;
+    const imgH=naturalH*ratio;
+    const offY=imgH<A4_H_PT?(A4_H_PT-imgH)/2:0;
 
     const imgData=canvas.toDataURL('image/jpeg',0.97);
     const{jsPDF}=window.jspdf;
     const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
-    doc.addImage(imgData,'JPEG', 0, offY, imgW, imgH);
+    doc.addImage(imgData,'JPEG',0,offY,imgW,imgH);
 
-    // ── 7. Add clickable link annotations ─────────────────────────────────────
-    // linkData x/y are in live-DOM layout pixels at RENDER_W width.
-    // The canvas was captured from the same layout (same width forced).
-    // Mapping: pdf_x = x * ratio, pdf_y = offY + y * ratio
+    // ── 7. Link annotations ───────────────────────────────────────────────────
     linkData.forEach(({x,y,w,h,url})=>{
-      doc.link(
-        x * ratio,
-        offY + y * ratio,
-        Math.max(w * ratio, 30),
-        Math.max(h * ratio, 10),
-        {url}
-      );
+      doc.link(x*ratio, offY+y*ratio, Math.max(w*ratio,30), Math.max(h*ratio,10), {url});
     });
 
     doc.save('خطة-شهرية-'+name.replace(/\s+/g,'-')+'.pdf');
     showToast('تم التصدير بنجاح','success');
 
   }catch(err){
-    const s=document.getElementById('__pdf_compact__');
-    if(s) s.remove();
+    if(sandbox.parentNode) document.body.removeChild(sandbox);
     console.error('Export error:',err);
     showToast('حدث خطأ أثناء التصدير','error');
   }
 
   btns.forEach(b=>{b.disabled=false;b.innerHTML='&#x2193; تصدير PDF';});
+}
+
+// ── HTML escape helper ─────────────────────────────────────────────────────────
+function escHtml(s){
+  return String(s||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
 }
 </script>
 </body>
