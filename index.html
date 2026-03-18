@@ -589,48 +589,79 @@ async function handleExport(){
   const btns=[document.getElementById('exportBtn'),document.getElementById('exportBtn2')];
   btns.forEach(b=>{b.disabled=true;b.innerHTML='<span class="spin"></span> جارٍ الإنشاء…';});
 
-  // A4 landscape reference width — no fixed height so content is never clipped
-  const A4_W_PX=1123;
+  // A4 landscape in points and pixels
+  const A4_W_PT=841.89, A4_H_PT=595.28;
+  const A4_W_PX=1123, A4_H_PX=794;
+
+  // Link data collected inside onclone where layout is accurate
+  const linkData=[];
 
   try{
     const wrap=document.getElementById('tplWrap');
 
     const canvas=await html2canvas(wrap,{
-      scale:2,useCORS:true,allowTaint:false,backgroundColor:'#ffffff',logging:false,
-      windowWidth:A4_W_PX,width:A4_W_PX,
-      // ↑ NO height constraint — capture the full natural height
-      onclone(clonedDoc,clonedEl){
+      scale:2, useCORS:true, allowTaint:false, backgroundColor:'#ffffff', logging:false,
+      windowWidth:A4_W_PX, width:A4_W_PX, height:A4_H_PX,
+      onclone(clonedDoc, clonedEl){
+
+        // ── Force exact A4 dimensions on the clone ──────────────────────────
         clonedEl.style.cssText+=(
           ';width:'+A4_W_PX+'px!important'+
           ';min-width:'+A4_W_PX+'px!important'+
           ';max-width:'+A4_W_PX+'px!important'+
-          ';height:auto!important'+
-          ';overflow:visible!important'+
+          ';height:'+A4_H_PX+'px!important'+
+          ';overflow:hidden!important'+
           ';box-sizing:border-box!important'
         );
-        clonedDoc.querySelectorAll('.tpl-grid-wrap').forEach(e=>{e.style.overflow='visible';e.style.width='100%';});
-        clonedEl.style.fontSize='11px';
 
-        // Replace textareas with static divs (html2canvas can't render textarea content reliably)
+        // ── Compact sizing so all 4 weeks + assessment fit in A4 ────────────
+        const style=clonedDoc.createElement('style');
+        style.textContent=`
+          /* Shrink table rows */
+          .tpl-grid td, .tpl-grid th { padding:3px 5px!important; font-size:9px!important; line-height:1.3!important; }
+          .week-cell  { font-size:9px!important; padding:3px 2px!important; }
+          .lesson-cell{ font-size:9px!important; padding:3px 2px!important; }
+          .input-cell { padding:3px 6px!important; }
+          /* Header */
+          .tpl-header { min-height:60px!important; }
+          .tpl-logo-cell { min-height:60px!important; padding:4px 10px!important; }
+          .info-label { font-size:8px!important; padding:3px 2px!important; }
+          .info-value { font-size:10px!important; padding:4px 4px!important; min-height:32px!important; }
+          /* Title bar */
+          .tpl-title-bar { font-size:13px!important; padding:6px!important; }
+          /* Assessment */
+          .tpl-assess-bar  { font-size:11px!important; padding:5px!important; }
+          .tpl-assess-body { padding:5px 10px!important; min-height:40px!important; }
+          /* Footer */
+          .tpl-footer { padding:4px 12px!important; }
+          .tpl-footer div { height:32px!important; line-height:32px!important; font-size:11px!important; }
+          /* Grid overflow */
+          .tpl-grid-wrap { overflow:visible!important; }
+          /* Homework chip */
+          .hw-link-disp { padding:2px 5px!important; margin-top:2px!important; }
+          .hw-link-anchor { font-size:9px!important; }
+        `;
+        clonedDoc.head.appendChild(style);
+
+        // ── Replace textareas with static divs ──────────────────────────────
         clonedDoc.querySelectorAll('textarea').forEach(ta=>{
           const div=clonedDoc.createElement('div');
-          div.style.cssText='font-family:Cairo,sans-serif;font-size:11px;font-weight:600;color:#1a2840;line-height:1.5;white-space:pre-wrap;word-break:break-word;width:100%;padding:0;direction:rtl;text-align:right;background:transparent;';
+          div.style.cssText='font-family:Cairo,sans-serif;font-size:9px;font-weight:600;color:#1a2840;line-height:1.3;white-space:pre-wrap;word-break:break-word;width:100%;padding:0;direction:rtl;text-align:right;background:transparent;';
           div.textContent=ta.value;
           ta.parentNode.replaceChild(div,ta);
         });
 
-        // Homework link chips — hide edit button
+        // ── Homework link chips ─────────────────────────────────────────────
+        clonedDoc.querySelectorAll('.hw-url-inp').forEach(i=>i.style.display='none');
         clonedDoc.querySelectorAll('.hw-link-disp').forEach(disp=>{
-          if(disp.style.display==='flex'){
-            disp.style.cssText='display:flex!important;align-items:center;gap:4px;padding:4px 8px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:4px;width:100%;margin-top:3px;';
+          if(disp.style.display==='flex'||disp.style.display===''){
+            disp.style.cssText='display:flex!important;align-items:center;gap:4px;padding:2px 6px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:4px;width:100%;margin-top:2px;';
           }
           const eb=disp.querySelector('.hw-edit-btn');
           if(eb) eb.style.display='none';
         });
-        // Hide url inputs in homework cells
-        clonedDoc.querySelectorAll('.hw-url-inp').forEach(i=>i.style.display='none');
 
-        // Assessment url-widget
+        // ── Assessment url-widget ───────────────────────────────────────────
         clonedDoc.querySelectorAll('.url-widget').forEach(wgt=>{
           const inp=wgt.querySelector('.url-inp');
           const disp=wgt.querySelector('.url-display');
@@ -638,60 +669,61 @@ async function handleExport(){
           if(!disp||disp.style.display!=='flex'){wgt.style.display='none';return;}
           disp.style.cssText='display:flex;align-items:center;gap:4px;padding:3px 6px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:4px;text-decoration:none;width:100%;';
           const lbl=disp.querySelector('.url-label');
-          if(lbl) lbl.style.cssText='flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:left;font-size:10px;color:#0066cc;text-decoration:underline;';
+          if(lbl) lbl.style.cssText='flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:left;font-size:9px;color:#0066cc;text-decoration:underline;';
           const edit=disp.querySelector('.url-edit');
           if(edit) edit.style.display='none';
+        });
+
+        // ── Collect link positions (BCR works in the hidden iframe) ─────────
+        // Must run AFTER all DOM mutations so positions are final.
+        // Use requestAnimationFrame trick: wrap in setTimeout(0) — but onclone
+        // is sync so we schedule a microtask via Promise to let layout settle.
+        // Actually we collect right away — BCR is available synchronously here.
+        const wrapBCR=clonedEl.getBoundingClientRect();
+
+        function collectLink(el, url){
+          if(!el||!url||url==='#'||url.endsWith('#')) return;
+          const r=el.getBoundingClientRect();
+          linkData.push({
+            x: r.left - wrapBCR.left,
+            y: r.top  - wrapBCR.top,
+            w: r.width,
+            h: r.height,
+            url
+          });
+        }
+
+        // Homework anchors
+        clonedDoc.querySelectorAll('.hw-link-anchor').forEach(a=>{
+          if(a.href) collectLink(a, a.href);
+        });
+
+        // Assessment url-display
+        clonedDoc.querySelectorAll('.url-display').forEach(a=>{
+          if(a.style.display==='flex') collectLink(a, a.href);
         });
       }
     });
 
-    const imgData=canvas.toDataURL('image/jpeg',0.96);
+    const imgData=canvas.toDataURL('image/jpeg',0.97);
     const{jsPDF}=window.jspdf;
     const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
-    const PW=doc.internal.pageSize.getWidth();   // 841.89 pt
-    const PH=doc.internal.pageSize.getHeight();  // 595.28 pt
 
-    // Natural dimensions (undo canvas scale:2)
-    const naturalW=canvas.width/2;
-    const naturalH=canvas.height/2;
+    // Image fills the full A4 page edge-to-edge
+    doc.addImage(imgData,'JPEG',0,0,A4_W_PT,A4_H_PT);
 
-    // Scale to fit within A4 — never upscale, always preserve aspect ratio
-    const ratio=Math.min(PW/naturalW, PH/naturalH, 1);
-    const finalW=naturalW*ratio;
-    const finalH=naturalH*ratio;
-    // Center on page
-    const offX=(PW-finalW)/2;
-    const offY=(PH-finalH)/2;
+    // ── Link annotations ────────────────────────────────────────────────────
+    // clonedEl was A4_W_PX × A4_H_PX px.
+    // PDF page is A4_W_PT × A4_H_PT pt.
+    // Conversion: pt = px * (A4_W_PT / A4_W_PX)  [same ratio for both axes]
+    const px2pt = A4_W_PT / A4_W_PX;
 
-    doc.addImage(imgData,'JPEG',offX,offY,finalW,finalH);
-
-    // ── Link annotations (scaled to match image position) ────────────────────
-    const liveW=wrap.offsetWidth;
-    const liveH=wrap.offsetHeight;
-    const scaleX=finalW/liveW;
-    const scaleY=finalH/liveH;
-
-    function addLink(domEl,url){
-      if(!domEl||!url) return;
-      const pos=offsetRelTo(domEl,wrap);
-      const pdfX=offX+pos.left*scaleX;
-      const pdfY=offY+pos.top*scaleY;
-      const pdfW=domEl.offsetWidth*scaleX;
-      const pdfH=Math.max(domEl.offsetHeight*scaleY,12);
-      doc.link(pdfX,pdfY,pdfW,pdfH,{url});
-    }
-
-    // Assessment url-display links
-    wrap.querySelectorAll('.url-display').forEach(a=>{
-      if(a.style.display==='flex'){
-        const url=a.href;
-        if(url&&url!=='#'&&!url.endsWith('#')) addLink(a,url);
-      }
-    });
-
-    // Homework anchor links (new widget)
-    wrap.querySelectorAll('.hw-link-anchor').forEach(a=>{
-      if(a.href&&a.href!=='#'&&!a.href.endsWith('#')) addLink(a,a.href);
+    linkData.forEach(({x,y,w,h,url})=>{
+      const pdfX = x * px2pt;
+      const pdfY = y * px2pt;
+      const pdfW = Math.max(w * px2pt, 20);
+      const pdfH = Math.max(h * px2pt, 10);
+      doc.link(pdfX, pdfY, pdfW, pdfH, {url});
     });
 
     doc.save('خطة-شهرية-'+name.replace(/\s+/g,'-')+'.pdf');
