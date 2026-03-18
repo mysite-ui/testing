@@ -79,6 +79,16 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .url-edit{flex-shrink:0;font-size:9px;color:var(--muted);padding:1px 5px;border-radius:3px;border:1px solid var(--border);background:var(--white);cursor:pointer;line-height:1.7;white-space:nowrap;}
 .url-edit:hover{background:var(--cell-bg);color:var(--navy);}
 
+/* ── Homework link display ── */
+.hw-link-disp{display:none;align-items:center;gap:5px;padding:5px 8px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:5px;width:100%;margin-top:3px;}
+.hw-link-anchor{flex:1;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;color:var(--link);text-decoration:underline;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl;text-align:right;cursor:pointer;}
+.hw-link-anchor:hover{color:#004499;}
+.hw-edit-btn{flex-shrink:0;font-size:9px;color:var(--muted);padding:1px 5px;border-radius:3px;border:1px solid var(--border);background:var(--white);cursor:pointer;line-height:1.7;white-space:nowrap;}
+.hw-edit-btn:hover{background:var(--cell-bg);color:var(--navy);}
+.hw-url-inp{font-family:'Cairo',sans-serif;font-size:11px;color:var(--link);background:#f8fcff;padding:5px 8px;border:1px dashed #c5d5e8;border-radius:5px;width:100%;direction:ltr;text-align:left;outline:none;transition:border .15s;margin-top:3px;}
+.hw-url-inp:focus{border-color:var(--navy-light);background:var(--white);}
+.hw-url-inp::placeholder{color:#b8c8dc;font-size:10.5px;}
+
 .modal-backdrop{position:fixed;inset:0;background:rgba(10,20,50,.55);z-index:800;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .modal-backdrop.open{opacity:1;pointer-events:all;}
 .modal{background:var(--white);border-radius:14px;padding:28px 28px 24px;max-width:480px;width:90%;box-shadow:0 16px 60px rgba(10,20,50,.3);transform:translateY(12px);transition:transform .2s;}
@@ -279,6 +289,68 @@ function wireUrlWidget(widget,onChange){
 
 wireUrlWidget(document.getElementById('assessUrlWidget'));
 
+// ── Homework Widget — text becomes clickable link ─────────────────────────────────────────
+function wireHomeworkWidget(cont,item){
+  const ta        = cont.querySelector('.hw-text');
+  const urlInp    = cont.querySelector('.hw-url-inp');
+  const linkDisp  = cont.querySelector('.hw-link-disp');
+  const linkAnchor= cont.querySelector('.hw-link-anchor');
+  const editBtn   = cont.querySelector('.hw-edit-btn');
+
+  function normalise(v){v=(v||'').trim();if(v&&!/^https?:\/\//i.test(v))v='https://'+v;return v;}
+
+  function updateAnchorLabel(){
+    linkAnchor.textContent = item.homeworkText.trim() || item.homeworkUrl;
+  }
+
+  function showLinkMode(){
+    updateAnchorLabel();
+    linkAnchor.href = item.homeworkUrl;
+    ta.style.display     = 'none';
+    urlInp.style.display = 'none';
+    linkDisp.style.display = 'flex';
+  }
+
+  function showEditMode(){
+    ta.style.display     = '';
+    urlInp.style.display = '';
+    linkDisp.style.display = 'none';
+    autoResize(ta);
+  }
+
+  function commitUrl(){
+    const url = normalise(urlInp.value);
+    urlInp.value = url;
+    item.homeworkUrl = url;
+    if(url) showLinkMode(); else showEditMode();
+  }
+
+  // Textarea changes
+  ta.addEventListener('input', e=>{
+    item.homeworkText = e.target.value;
+    autoResize(e.target);
+  });
+
+  // URL input
+  urlInp.addEventListener('blur', commitUrl);
+  urlInp.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){e.preventDefault();commitUrl();}
+  });
+
+  // Edit button inside the link chip
+  editBtn.addEventListener('click', e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    urlInp.value = item.homeworkUrl;
+    showEditMode();
+    urlInp.focus();
+  });
+
+  // Init state
+  if(item.homeworkUrl){ urlInp.value=item.homeworkUrl; showLinkMode(); }
+  else showEditMode();
+}
+
 // ── Build grid ─────────────────────────────────────────────────────────────────
 function buildGrid(){
   const tbody=document.getElementById('planBody');
@@ -302,23 +374,23 @@ function buildGrid(){
 
       const tdHw=document.createElement('td');tdHw.className='input-cell';
       const cont=document.createElement('div');cont.className='homework-container';
+
       const taHw=document.createElement('textarea');
-      taHw.placeholder='الواجب…';taHw.value=item.homeworkText;
-      taHw.addEventListener('input',e=>{item.homeworkText=e.target.value;autoResize(e.target);});
+      taHw.className='hw-text';taHw.placeholder='الواجب…';taHw.value=item.homeworkText;
 
-      const wgt=document.createElement('div');wgt.className='url-widget';
-      const wInp=document.createElement('input');wInp.className='url-inp';wInp.type='url';wInp.placeholder='أضف رابطاً (اختياري)';
-      const wA=document.createElement('a');wA.className='url-display';wA.href='#';wA.target='_blank';wA.rel='noopener';
-      const wIcon=document.createElement('span');wIcon.className='url-icon';wIcon.textContent='🔗';
-      const wLabel=document.createElement('span');wLabel.className='url-label';
-      const wEdit=document.createElement('span');wEdit.className='url-edit';wEdit.textContent='تعديل';
-      wA.appendChild(wIcon);wA.appendChild(wLabel);wA.appendChild(wEdit);
-      wgt.appendChild(wInp);wgt.appendChild(wA);
-      wireUrlWidget(wgt,url=>{item.homeworkUrl=url;});
-      if(item.homeworkUrl) wgt.setUrl(item.homeworkUrl);
+      const urlInp=document.createElement('input');
+      urlInp.className='hw-url-inp';urlInp.type='url';urlInp.placeholder='أضف رابطاً (اختياري)';
+      urlInp.value=item.homeworkUrl||'';
 
-      cont.appendChild(taHw);cont.appendChild(wgt);
+      const linkDisp=document.createElement('div');linkDisp.className='hw-link-disp';
+      const linkAnchor=document.createElement('a');linkAnchor.className='hw-link-anchor';linkAnchor.target='_blank';linkAnchor.rel='noopener';
+      const editBtn=document.createElement('span');editBtn.className='hw-edit-btn';editBtn.textContent='تعديل';
+      linkDisp.appendChild(linkAnchor);linkDisp.appendChild(editBtn);
+
+      cont.appendChild(taHw);cont.appendChild(urlInp);cont.appendChild(linkDisp);
       tdHw.appendChild(cont);row.appendChild(tdHw);
+
+      wireHomeworkWidget(cont,item);
       tbody.appendChild(row);
     }
   }
@@ -517,22 +589,48 @@ async function handleExport(){
   const btns=[document.getElementById('exportBtn'),document.getElementById('exportBtn2')];
   btns.forEach(b=>{b.disabled=true;b.innerHTML='<span class="spin"></span> جارٍ الإنشاء…';});
 
-  const A4_W_PX=1123,A4_H_PX=794;
+  // A4 landscape reference width — no fixed height so content is never clipped
+  const A4_W_PX=1123;
 
   try{
     const wrap=document.getElementById('tplWrap');
+
     const canvas=await html2canvas(wrap,{
       scale:2,useCORS:true,allowTaint:false,backgroundColor:'#ffffff',logging:false,
-      windowWidth:A4_W_PX,width:A4_W_PX,height:A4_H_PX,
+      windowWidth:A4_W_PX,width:A4_W_PX,
+      // ↑ NO height constraint — capture the full natural height
       onclone(clonedDoc,clonedEl){
-        clonedEl.style.cssText+=(';width:'+A4_W_PX+'px!important;min-width:'+A4_W_PX+'px!important;max-width:'+A4_W_PX+'px!important;height:'+A4_H_PX+'px!important;overflow:hidden!important;box-sizing:border-box!important');
+        clonedEl.style.cssText+=(
+          ';width:'+A4_W_PX+'px!important'+
+          ';min-width:'+A4_W_PX+'px!important'+
+          ';max-width:'+A4_W_PX+'px!important'+
+          ';height:auto!important'+
+          ';overflow:visible!important'+
+          ';box-sizing:border-box!important'
+        );
         clonedDoc.querySelectorAll('.tpl-grid-wrap').forEach(e=>{e.style.overflow='visible';e.style.width='100%';});
         clonedEl.style.fontSize='11px';
+
+        // Replace textareas with static divs (html2canvas can't render textarea content reliably)
         clonedDoc.querySelectorAll('textarea').forEach(ta=>{
           const div=clonedDoc.createElement('div');
           div.style.cssText='font-family:Cairo,sans-serif;font-size:11px;font-weight:600;color:#1a2840;line-height:1.5;white-space:pre-wrap;word-break:break-word;width:100%;padding:0;direction:rtl;text-align:right;background:transparent;';
-          div.textContent=ta.value;ta.parentNode.replaceChild(div,ta);
+          div.textContent=ta.value;
+          ta.parentNode.replaceChild(div,ta);
         });
+
+        // Homework link chips — hide edit button
+        clonedDoc.querySelectorAll('.hw-link-disp').forEach(disp=>{
+          if(disp.style.display==='flex'){
+            disp.style.cssText='display:flex!important;align-items:center;gap:4px;padding:4px 8px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:4px;width:100%;margin-top:3px;';
+          }
+          const eb=disp.querySelector('.hw-edit-btn');
+          if(eb) eb.style.display='none';
+        });
+        // Hide url inputs in homework cells
+        clonedDoc.querySelectorAll('.hw-url-inp').forEach(i=>i.style.display='none');
+
+        // Assessment url-widget
         clonedDoc.querySelectorAll('.url-widget').forEach(wgt=>{
           const inp=wgt.querySelector('.url-inp');
           const disp=wgt.querySelector('.url-display');
@@ -550,22 +648,55 @@ async function handleExport(){
     const imgData=canvas.toDataURL('image/jpeg',0.96);
     const{jsPDF}=window.jspdf;
     const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
-    const PW=doc.internal.pageSize.getWidth(),PH=doc.internal.pageSize.getHeight();
-    doc.addImage(imgData,'JPEG',0,0,PW,PH);
+    const PW=doc.internal.pageSize.getWidth();   // 841.89 pt
+    const PH=doc.internal.pageSize.getHeight();  // 595.28 pt
 
-    const liveW=wrap.offsetWidth,liveH=wrap.offsetHeight;
-    const scaleX=PW/liveW,scaleY=PH/liveH;
+    // Natural dimensions (undo canvas scale:2)
+    const naturalW=canvas.width/2;
+    const naturalH=canvas.height/2;
+
+    // Scale to fit within A4 — never upscale, always preserve aspect ratio
+    const ratio=Math.min(PW/naturalW, PH/naturalH, 1);
+    const finalW=naturalW*ratio;
+    const finalH=naturalH*ratio;
+    // Center on page
+    const offX=(PW-finalW)/2;
+    const offY=(PH-finalH)/2;
+
+    doc.addImage(imgData,'JPEG',offX,offY,finalW,finalH);
+
+    // ── Link annotations (scaled to match image position) ────────────────────
+    const liveW=wrap.offsetWidth;
+    const liveH=wrap.offsetHeight;
+    const scaleX=finalW/liveW;
+    const scaleY=finalH/liveH;
+
     function addLink(domEl,url){
       if(!domEl||!url) return;
       const pos=offsetRelTo(domEl,wrap);
-      doc.link(pos.left*scaleX,pos.top*scaleY,domEl.offsetWidth*scaleX,Math.max(domEl.offsetHeight*scaleY,12),{url});
+      const pdfX=offX+pos.left*scaleX;
+      const pdfY=offY+pos.top*scaleY;
+      const pdfW=domEl.offsetWidth*scaleX;
+      const pdfH=Math.max(domEl.offsetHeight*scaleY,12);
+      doc.link(pdfX,pdfY,pdfW,pdfH,{url});
     }
+
+    // Assessment url-display links
     wrap.querySelectorAll('.url-display').forEach(a=>{
-      if(a.style.display==='flex'){const url=a.href;if(url&&url!=='#'&&!url.endsWith('#')) addLink(a,url);}
+      if(a.style.display==='flex'){
+        const url=a.href;
+        if(url&&url!=='#'&&!url.endsWith('#')) addLink(a,url);
+      }
+    });
+
+    // Homework anchor links (new widget)
+    wrap.querySelectorAll('.hw-link-anchor').forEach(a=>{
+      if(a.href&&a.href!=='#'&&!a.href.endsWith('#')) addLink(a,a.href);
     });
 
     doc.save('خطة-شهرية-'+name.replace(/\s+/g,'-')+'.pdf');
     showToast('تم التصدير بنجاح','success');
+
   }catch(err){
     console.error('Export error:',err);
     showToast('حدث خطأ أثناء التصدير','error');
