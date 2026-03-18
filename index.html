@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -41,7 +42,6 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .field input:focus,.field select:focus{border-color:var(--navy-light);box-shadow:0 0 0 3px rgba(46,93,168,.12);background:var(--white);}
 .preview-card{background:var(--white);border-radius:12px;box-shadow:0 2px 16px rgba(26,58,107,.1);overflow:hidden;}
 
-/* ── Template ── */
 .tpl-wrap{width:100%;font-family:'Cairo',sans-serif;direction:rtl;}
 .tpl-header{display:grid;grid-template-columns:220px 1fr;border-bottom:2px solid var(--border);min-height:90px;}
 .tpl-logo-cell{padding:8px 14px;display:flex;align-items:center;justify-content:center;border-left:1.5px solid var(--border);background:var(--cell-bg);min-height:90px;overflow:hidden;}
@@ -68,7 +68,6 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .input-cell textarea:focus,#assessment:focus{background:#eff6ff;}
 #assessment{min-height:60px;}
 
-/* ── URL Widget ── */
 .url-widget{width:100%;}
 .url-inp{font-family:'Cairo',sans-serif;font-size:11px;color:var(--link);background:#f8fcff;padding:5px 8px;border:1px dashed #c5d5e8;border-radius:5px;width:100%;direction:ltr;text-align:left;outline:none;transition:border .15s;}
 .url-inp:focus{border-color:var(--navy-light);background:var(--white);}
@@ -80,7 +79,6 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .url-edit{flex-shrink:0;font-size:9px;color:var(--muted);padding:1px 5px;border-radius:3px;border:1px solid var(--border);background:var(--white);cursor:pointer;line-height:1.7;white-space:nowrap;}
 .url-edit:hover{background:var(--cell-bg);color:var(--navy);}
 
-/* ── Share modal ── */
 .modal-backdrop{position:fixed;inset:0;background:rgba(10,20,50,.55);z-index:800;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .modal-backdrop.open{opacity:1;pointer-events:all;}
 .modal{background:var(--white);border-radius:14px;padding:28px 28px 24px;max-width:480px;width:90%;box-shadow:0 16px 60px rgba(10,20,50,.3);transform:translateY(12px);transition:transform .2s;}
@@ -88,7 +86,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .modal h3{font-size:16px;font-weight:900;color:var(--navy);margin-bottom:6px;}
 .modal p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;}
 .share-row{display:flex;gap:8px;align-items:stretch;}
-.share-inp{flex:1;font-family:'Cairo',sans-serif;font-size:11px;color:var(--text);background:var(--cell-bg);border:1.5px solid var(--border);border-radius:7px;padding:9px 12px;outline:none;direction:ltr;text-align:left;cursor:text;}
+.share-inp{flex:1;font-family:'Cairo',sans-serif;font-size:13px;color:var(--text);background:var(--cell-bg);border:1.5px solid var(--border);border-radius:7px;padding:9px 12px;outline:none;direction:ltr;text-align:left;cursor:text;}
 .share-inp:focus{border-color:var(--navy-light);}
 .btn-copy{font-family:'Cairo',sans-serif;font-size:12px;font-weight:800;padding:9px 18px;border-radius:7px;border:none;cursor:pointer;background:var(--navy);color:var(--white);white-space:nowrap;transition:background .15s;}
 .btn-copy:hover{background:var(--navy-light);}
@@ -96,6 +94,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .modal-close{position:absolute;top:14px;left:18px;font-size:20px;background:none;border:none;cursor:pointer;color:var(--muted);line-height:1;}
 .modal-close:hover{color:var(--text);}
 .modal-wrap{position:relative;}
+.share-status{font-size:11px;color:var(--muted);margin-top:8px;text-align:center;min-height:18px;}
+.share-status.ok{color:#166534;}
+.share-status.err{color:var(--red);}
 
 .tpl-assess-bar{background:var(--yellow);color:var(--navy-dark);font-size:15px;font-weight:900;text-align:center;padding:10px;}
 .tpl-assess-body{padding:10px 14px;min-height:64px;border-top:1px solid var(--border);}
@@ -126,11 +127,12 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="modal modal-wrap">
     <button class="modal-close" onclick="document.getElementById('shareModal').classList.remove('open')">&#x2715;</button>
     <h3>&#x1F517; مشاركة الخطة</h3>
-    <p>أرسل هذا الرابط المختصر لأي شخص — سيفتح الخطة كاملةً جاهزةً للتعديل.</p>
+    <p>رابط مختصر — أرسله لأي شخص وسيفتح الخطة جاهزةً للتعديل.</p>
     <div class="share-row">
       <input class="share-inp" id="shareInp" type="text" readonly value="" onclick="this.select()"/>
       <button class="btn-copy" id="copyBtn" onclick="copyShareLink()">نسخ</button>
     </div>
+    <div class="share-status" id="shareStatus"></div>
   </div>
 </div>
 
@@ -227,7 +229,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Dropdowns ─────────────────────────────────────────────────────────────────
+// ── Dropdowns ──────────────────────────────────────────────────────────────────
 const MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const gradeEl=document.getElementById('grade');
 const monthEl=document.getElementById('month');
@@ -235,68 +237,49 @@ for(let g=1;g<=12;g++){const o=document.createElement('option');o.value=g;o.text
 MONTHS_AR.forEach((m,i)=>{const o=document.createElement('option');o.value=m;o.textContent=m;if(i===new Date().getMonth())o.selected=true;monthEl.appendChild(o);});
 document.getElementById('year').value=new Date().getFullYear();
 
-// ── Grid state ────────────────────────────────────────────────────────────────
+// ── Grid state ─────────────────────────────────────────────────────────────────
 const grid=[];
 for(let w=1;w<=4;w++) for(let l=1;l<=2;l++)
   grid.push({week:w,lesson:l,content:'',outcomes:'',homeworkText:'',homeworkUrl:''});
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────────
 function autoResize(ta){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';}
 function resizeAll(){document.querySelectorAll('#planBody textarea,#assessment').forEach(autoResize);}
 
-// ── Get element offset relative to an ancestor (scroll-independent) ──────────
-function offsetRelTo(el, ancestor){
-  let top=0, left=0;
-  while(el && el!==ancestor){
-    top+=el.offsetTop;
-    left+=el.offsetLeft;
-    el=el.offsetParent;
-  }
-  return {top, left};
+function offsetRelTo(el,ancestor){
+  let top=0,left=0;
+  while(el&&el!==ancestor){top+=el.offsetTop;left+=el.offsetLeft;el=el.offsetParent;}
+  return{top,left};
 }
 
-// ── URL Widget ────────────────────────────────────────────────────────────────
-function wireUrlWidget(widget, onChange){
-  const inp    = widget.querySelector('.url-inp');
-  const disp   = widget.querySelector('.url-display');
-  const label  = widget.querySelector('.url-label');
-  const editBtn= widget.querySelector('.url-edit');
+// ── URL Widget ─────────────────────────────────────────────────────────────────
+function wireUrlWidget(widget,onChange){
+  const inp=widget.querySelector('.url-inp');
+  const disp=widget.querySelector('.url-display');
+  const label=widget.querySelector('.url-label');
+  const editBtn=widget.querySelector('.url-edit');
 
-  function normalise(v){
-    v=(v||'').trim();
-    if(v && !/^https?:\/\//i.test(v)) v='https://'+v;
-    return v;
-  }
-  function showLink(url){
-    disp.href=url; label.textContent=url;
-    inp.style.display='none'; disp.style.display='flex';
-    if(onChange) onChange(url);
-  }
-  function showInput(){
-    disp.style.display='none'; inp.style.display='';
-    if(onChange) onChange('');
-  }
-  function commit(){
-    const url=normalise(inp.value);
-    if(url){ inp.value=url; showLink(url); } else showInput();
-  }
+  function normalise(v){v=(v||'').trim();if(v&&!/^https?:\/\//i.test(v))v='https://'+v;return v;}
+  function showLink(url){disp.href=url;label.textContent=url;inp.style.display='none';disp.style.display='flex';if(onChange)onChange(url);}
+  function showInput(){disp.style.display='none';inp.style.display='';if(onChange)onChange('');}
+  function commit(){const url=normalise(inp.value);if(url){inp.value=url;showLink(url);}else showInput();}
 
-  inp.addEventListener('blur', commit);
-  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){e.preventDefault();commit();} });
-  editBtn.addEventListener('click', e=>{
-    e.preventDefault(); e.stopPropagation();
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commit();}});
+  editBtn.addEventListener('click',e=>{
+    e.preventDefault();e.stopPropagation();
     inp.value=(disp.href==='#'||disp.href===location.href+'#')?'':disp.href;
     showInput();
   });
 
   widget.getUrl=()=>(disp.style.display==='flex'&&disp.href!=='#'&&!disp.href.endsWith('#'))?disp.href:'';
-  widget.setUrl=(url)=>{ if(url){inp.value=url;showLink(url);}else{inp.value='';showInput();} };
-  showInput(); // init inline styles
+  widget.setUrl=(url)=>{if(url){inp.value=url;showLink(url);}else{inp.value='';showInput();}};
+  showInput();
 }
 
 wireUrlWidget(document.getElementById('assessUrlWidget'));
 
-// ── Build grid ────────────────────────────────────────────────────────────────
+// ── Build grid ─────────────────────────────────────────────────────────────────
 function buildGrid(){
   const tbody=document.getElementById('planBody');
   tbody.innerHTML='';
@@ -305,11 +288,7 @@ function buildGrid(){
       const idx=(w-1)*2+(l-1);
       const item=grid[idx];
       const row=document.createElement('tr');
-      if(l===1){
-        const wc=document.createElement('td');
-        wc.className='week-cell';wc.rowSpan=2;wc.textContent='الأسبوع '+w;
-        row.appendChild(wc);
-      }
+      if(l===1){const wc=document.createElement('td');wc.className='week-cell';wc.rowSpan=2;wc.textContent='الأسبوع '+w;row.appendChild(wc);}
       const lc=document.createElement('td');lc.className='lesson-cell';lc.textContent='الدرس '+l;row.appendChild(lc);
 
       ['content','outcomes'].forEach(key=>{
@@ -335,7 +314,7 @@ function buildGrid(){
       const wEdit=document.createElement('span');wEdit.className='url-edit';wEdit.textContent='تعديل';
       wA.appendChild(wIcon);wA.appendChild(wLabel);wA.appendChild(wEdit);
       wgt.appendChild(wInp);wgt.appendChild(wA);
-      wireUrlWidget(wgt, url=>{ item.homeworkUrl=url; });
+      wireUrlWidget(wgt,url=>{item.homeworkUrl=url;});
       if(item.homeworkUrl) wgt.setUrl(item.homeworkUrl);
 
       cont.appendChild(taHw);cont.appendChild(wgt);
@@ -347,7 +326,7 @@ function buildGrid(){
 }
 buildGrid();
 
-// ── Preview sync ──────────────────────────────────────────────────────────────
+// ── Preview sync ───────────────────────────────────────────────────────────────
 function syncPreview(){
   document.getElementById('preview-name').textContent=document.getElementById('studentName').value||'—';
   document.getElementById('preview-month').textContent=document.getElementById('month').value||'—';
@@ -360,54 +339,65 @@ function syncPreview(){
 });
 syncPreview();
 
-// ── Collect / restore full state ──────────────────────────────────────────────
+// ── Collect / restore state ────────────────────────────────────────────────────
 function collectState(){
-  return {
-    studentName: document.getElementById('studentName').value,
-    grade:       document.getElementById('grade').value,
-    month:       document.getElementById('month').value,
-    subject:     document.getElementById('subject').value,
-    year:        document.getElementById('year').value,
-    assessment:  document.getElementById('assessment').value,
-    assessUrl:   document.getElementById('assessUrlWidget').getUrl(),
-    grid:        grid.map(r=>({content:r.content,outcomes:r.outcomes,homeworkText:r.homeworkText,homeworkUrl:r.homeworkUrl}))
+  return{
+    n:document.getElementById('studentName').value,
+    g:document.getElementById('grade').value,
+    m:document.getElementById('month').value,
+    s:document.getElementById('subject').value,
+    y:document.getElementById('year').value,
+    a:document.getElementById('assessment').value,
+    au:document.getElementById('assessUrlWidget').getUrl(),
+    r:grid.map(r=>({c:r.content,o:r.outcomes,h:r.homeworkText,u:r.homeworkUrl}))
   };
 }
 function applyState(s){
   if(!s) return;
-  if(s.studentName!==undefined) document.getElementById('studentName').value=s.studentName;
-  if(s.grade!==undefined)       document.getElementById('grade').value=s.grade;
-  if(s.month!==undefined)       document.getElementById('month').value=s.month;
-  if(s.subject!==undefined)     document.getElementById('subject').value=s.subject;
-  if(s.year!==undefined)        document.getElementById('year').value=s.year;
-  if(s.assessment!==undefined)  document.getElementById('assessment').value=s.assessment;
-  if(s.assessUrl)               document.getElementById('assessUrlWidget').setUrl(s.assessUrl);
-  if(s.grid && s.grid.length===grid.length){
-    s.grid.forEach((r,i)=>Object.assign(grid[i],r));
+  if(s.n!==undefined) document.getElementById('studentName').value=s.n;
+  if(s.g!==undefined) document.getElementById('grade').value=s.g;
+  if(s.m!==undefined) document.getElementById('month').value=s.m;
+  if(s.s!==undefined) document.getElementById('subject').value=s.s;
+  if(s.y!==undefined) document.getElementById('year').value=s.y;
+  if(s.a!==undefined) document.getElementById('assessment').value=s.a;
+  if(s.au)            document.getElementById('assessUrlWidget').setUrl(s.au);
+  if(s.r&&s.r.length===grid.length){
+    s.r.forEach((r,i)=>{grid[i].content=r.c||'';grid[i].outcomes=r.o||'';grid[i].homeworkText=r.h||'';grid[i].homeworkUrl=r.u||'';});
   }
-  buildGrid();
-  syncPreview();
+  buildGrid();syncPreview();
 }
 
-// ── URL hash encode/decode ────────────────────────────────────────────────────
+// ── Hash encode/decode — LZ-compressed, ~60% smaller than plain base64 ────────
 function stateToHash(s){
-  try{ return '#v1:'+btoa(unescape(encodeURIComponent(JSON.stringify(s)))); }
-  catch(e){ return ''; }
+  try{
+    const json=JSON.stringify(s);
+    const compressed=LZString.compressToEncodedURIComponent(json);
+    return '#z:'+compressed;
+  }catch(e){return '';}
 }
 function hashToState(hash){
   try{
-    if(!hash||!hash.startsWith('#v1:')) return null;
-    return JSON.parse(decodeURIComponent(escape(atob(hash.slice(4)))));
-  }catch(e){ return null; }
+    if(!hash) return null;
+    // New compressed format
+    if(hash.startsWith('#z:')){
+      const json=LZString.decompressFromEncodedURIComponent(hash.slice(3));
+      return JSON.parse(json);
+    }
+    // Legacy uncompressed format (backward-compatible)
+    if(hash.startsWith('#v1:')){
+      return JSON.parse(decodeURIComponent(escape(atob(hash.slice(4)))));
+    }
+    return null;
+  }catch(e){return null;}
 }
 
-// ── Restore from URL hash on load ─────────────────────────────────────────────
+// ── Restore from URL hash ──────────────────────────────────────────────────────
 (function(){
   const s=hashToState(location.hash);
   if(s) applyState(s);
 })();
 
-// ── Reset ─────────────────────────────────────────────────────────────────────
+// ── Reset ──────────────────────────────────────────────────────────────────────
 function handleReset(){
   document.getElementById('studentName').value='';
   document.getElementById('grade').value=5;
@@ -417,73 +407,102 @@ function handleReset(){
   document.getElementById('assessment').value='';
   document.getElementById('assessUrlWidget').setUrl('');
   grid.forEach(r=>{r.content='';r.outcomes='';r.homeworkText='';r.homeworkUrl='';});
-  buildGrid(); syncPreview();
+  buildGrid();syncPreview();
   history.replaceState(null,'',location.pathname+location.search);
   showToast('تم المسح','success');
 }
 
-// ── Link Shortener (TinyURL + shrtco.de fallback - no API key) ───────────────
-async function shortenLink(longUrl){
-  // 1. TinyURL (very reliable, plain text response)
+// ── URL Shortener — 3-service cascade ─────────────────────────────────────────
+async function shortenUrl(longUrl){
+  // 1. is.gd — CORS-friendly, returns JSON, produces ~20 char URLs
   try{
-    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
-    if(res.ok){
-      const short = await res.text();
-      if(short && short.startsWith('http')) return short.trim();
+    const r=await fetch(
+      'https://is.gd/create.php?format=json&url='+encodeURIComponent(longUrl),
+      {signal:AbortSignal.timeout(5000)}
+    );
+    if(r.ok){
+      const d=await r.json();
+      if(d.shorturl) return{url:d.shorturl,service:'is.gd'};
     }
   }catch(e){}
 
-  // 2. shrtco.de fallback (JSON)
+  // 2. TinyURL — plain text response
   try{
-    const res = await fetch(`https://api.shrtco.de/v2/shorten?url=${encodeURIComponent(longUrl)}`);
-    if(res.ok){
-      const data = await res.json();
-      if(data.result && data.result.short_link) return data.result.short_link;
+    const r=await fetch(
+      'https://tinyurl.com/api-create.php?url='+encodeURIComponent(longUrl),
+      {signal:AbortSignal.timeout(5000)}
+    );
+    if(r.ok){
+      const t=await r.text();
+      if(t&&t.startsWith('http')) return{url:t.trim(),service:'TinyURL'};
     }
   }catch(e){}
 
-  // fallback to original long link
-  return longUrl;
+  // 3. cleanuri.com — POST, JSON
+  try{
+    const r=await fetch('https://cleanuri.com/api/v1/shorten',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:'url='+encodeURIComponent(longUrl),
+      signal:AbortSignal.timeout(5000)
+    });
+    if(r.ok){
+      const d=await r.json();
+      if(d.result_url) return{url:d.result_url,service:'cleanuri'};
+    }
+  }catch(e){}
+
+  return{url:longUrl,service:null};
 }
 
-// ── Share (now with automatic shortening) ─────────────────────────────────────
+// ── Share ──────────────────────────────────────────────────────────────────────
 async function handleShare(){
   const state=collectState();
   const hash=stateToHash(state);
   const longUrl=location.origin+location.pathname+location.search+hash;
 
-  // show modal immediately with loading message
-  document.getElementById('shareInp').value='جارٍ اختصار الرابط...';
-  document.getElementById('copyBtn').textContent='نسخ';
-  document.getElementById('copyBtn').classList.remove('copied');
+  // Open modal immediately with spinner
+  const inp=document.getElementById('shareInp');
+  const status=document.getElementById('shareStatus');
+  const copyBtn=document.getElementById('copyBtn');
+  inp.value='⏳ جارٍ الاختصار…';
+  inp.style.color='var(--muted)';
+  status.textContent='';
+  status.className='share-status';
+  copyBtn.textContent='نسخ';
+  copyBtn.classList.remove('copied');
   document.getElementById('shareModal').classList.add('open');
 
-  // shorten in background
-  const shortUrl = await shortenLink(longUrl);
-  document.getElementById('shareInp').value = shortUrl;
+  const {url,service}=await shortenUrl(longUrl);
+  inp.value=url;
+  inp.style.color='';
 
-  if(shortUrl !== longUrl){
-    showToast('تم اختصار الرابط بنجاح (TinyURL)','success');
+  if(service){
+    status.textContent='✓ تم الاختصار بواسطة '+service;
+    status.className='share-status ok';
+  }else{
+    status.textContent='تعذّر الاختصار — تم نسخ الرابط الكامل';
+    status.className='share-status err';
   }
 }
+
 function closeShareModal(e){
   if(e.target===document.getElementById('shareModal'))
     document.getElementById('shareModal').classList.remove('open');
 }
+
 function copyShareLink(){
   const inp=document.getElementById('shareInp');
+  if(!inp.value||inp.value.startsWith('⏳')) return;
   inp.select();
   navigator.clipboard.writeText(inp.value).then(()=>{
     const btn=document.getElementById('copyBtn');
     btn.textContent='✓ تم النسخ';btn.classList.add('copied');
     setTimeout(()=>{btn.textContent='نسخ';btn.classList.remove('copied');},2200);
-  }).catch(()=>{
-    document.execCommand('copy');
-    showToast('تم نسخ الرابط','success');
-  });
+  }).catch(()=>{document.execCommand('copy');showToast('تم نسخ الرابط','success');});
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
+// ── Toast ──────────────────────────────────────────────────────────────────────
 let toastTimer;
 function showToast(msg,type='success'){
   const t=document.getElementById('toast');
@@ -491,7 +510,7 @@ function showToast(msg,type='success'){
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className='toast',2800);
 }
 
-// ── PDF Export ────────────────────────────────────────────────────────────────
+// ── PDF Export ─────────────────────────────────────────────────────────────────
 async function handleExport(){
   const name=document.getElementById('studentName').value.trim();
   if(!name){showToast('الرجاء إدخال اسم الطالب','error');return;}
@@ -499,94 +518,55 @@ async function handleExport(){
   const btns=[document.getElementById('exportBtn'),document.getElementById('exportBtn2')];
   btns.forEach(b=>{b.disabled=true;b.innerHTML='<span class="spin"></span> جارٍ الإنشاء…';});
 
-  // A4 landscape: 841.89 × 595.28 pt  →  at 96dpi: 1122.5 × 793.7 px
-  const A4_W_PX=1123;
-  const A4_H_PX=794;
+  const A4_W_PX=1123,A4_H_PX=794;
 
   try{
     const wrap=document.getElementById('tplWrap');
-
     const canvas=await html2canvas(wrap,{
-      scale:2,
-      useCORS:true,
-      allowTaint:false,
-      backgroundColor:'#ffffff',
-      logging:false,
-      windowWidth:A4_W_PX,
-      width:A4_W_PX,
-      height:A4_H_PX,
-      onclone(clonedDoc, clonedEl){
-        clonedEl.style.cssText+=(
-          ';width:'+A4_W_PX+'px!important'+
-          ';min-width:'+A4_W_PX+'px!important'+
-          ';max-width:'+A4_W_PX+'px!important'+
-          ';height:'+A4_H_PX+'px!important'+
-          ';overflow:hidden!important'+
-          ';box-sizing:border-box!important'
-        );
+      scale:2,useCORS:true,allowTaint:false,backgroundColor:'#ffffff',logging:false,
+      windowWidth:A4_W_PX,width:A4_W_PX,height:A4_H_PX,
+      onclone(clonedDoc,clonedEl){
+        clonedEl.style.cssText+=(';width:'+A4_W_PX+'px!important;min-width:'+A4_W_PX+'px!important;max-width:'+A4_W_PX+'px!important;height:'+A4_H_PX+'px!important;overflow:hidden!important;box-sizing:border-box!important');
         clonedDoc.querySelectorAll('.tpl-grid-wrap').forEach(e=>{e.style.overflow='visible';e.style.width='100%';});
         clonedEl.style.fontSize='11px';
-
-        // Textareas → divs
         clonedDoc.querySelectorAll('textarea').forEach(ta=>{
           const div=clonedDoc.createElement('div');
           div.style.cssText='font-family:Cairo,sans-serif;font-size:11px;font-weight:600;color:#1a2840;line-height:1.5;white-space:pre-wrap;word-break:break-word;width:100%;padding:0;direction:rtl;text-align:right;background:transparent;';
-          div.textContent=ta.value;
-          ta.parentNode.replaceChild(div,ta);
+          div.textContent=ta.value;ta.parentNode.replaceChild(div,ta);
         });
-
-        // URL widgets
         clonedDoc.querySelectorAll('.url-widget').forEach(wgt=>{
           const inp=wgt.querySelector('.url-inp');
           const disp=wgt.querySelector('.url-display');
           if(inp) inp.style.display='none';
-          if(!disp||disp.style.display!=='flex'){ wgt.style.display='none'; return; }
+          if(!disp||disp.style.display!=='flex'){wgt.style.display='none';return;}
           disp.style.cssText='display:flex;align-items:center;gap:4px;padding:3px 6px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:4px;text-decoration:none;width:100%;';
           const lbl=disp.querySelector('.url-label');
           if(lbl) lbl.style.cssText='flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:left;font-size:10px;color:#0066cc;text-decoration:underline;';
-          const icon=disp.querySelector('.url-icon');
-          if(icon) icon.style.cssText='font-size:11px;flex-shrink:0;';
           const edit=disp.querySelector('.url-edit');
-          if(edit) edit.style.display='none'; // hide "تعديل" in PDF
+          if(edit) edit.style.display='none';
         });
       }
     });
 
     const imgData=canvas.toDataURL('image/jpeg',0.96);
-    const {jsPDF}=window.jspdf;
+    const{jsPDF}=window.jspdf;
     const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
-    const PW=doc.internal.pageSize.getWidth();   // 841.89
-    const PH=doc.internal.pageSize.getHeight();  // 595.28
-
-    // Fill page edge-to-edge
+    const PW=doc.internal.pageSize.getWidth(),PH=doc.internal.pageSize.getHeight();
     doc.addImage(imgData,'JPEG',0,0,PW,PH);
 
-    // ── Link annotations ──────────────────────────────────────────────────────
-    const liveW=wrap.offsetWidth;
-    const liveH=wrap.offsetHeight;
-    const scaleX=PW/liveW;
-    const scaleY=PH/liveH;
-
-    function addLink(domEl, url){
+    const liveW=wrap.offsetWidth,liveH=wrap.offsetHeight;
+    const scaleX=PW/liveW,scaleY=PH/liveH;
+    function addLink(domEl,url){
       if(!domEl||!url) return;
-      const pos=offsetRelTo(domEl, wrap);
-      const pdfX=pos.left*scaleX;
-      const pdfY=pos.top*scaleY;
-      const pdfW=domEl.offsetWidth*scaleX;
-      const pdfH=Math.max(domEl.offsetHeight*scaleY, 12);
-      doc.link(pdfX, pdfY, pdfW, pdfH, {url});
+      const pos=offsetRelTo(domEl,wrap);
+      doc.link(pos.left*scaleX,pos.top*scaleY,domEl.offsetWidth*scaleX,Math.max(domEl.offsetHeight*scaleY,12),{url});
     }
-
     wrap.querySelectorAll('.url-display').forEach(a=>{
-      if(a.style.display==='flex'){
-        const url=a.href;
-        if(url&&url!=='#'&&!url.endsWith('#')) addLink(a,url);
-      }
+      if(a.style.display==='flex'){const url=a.href;if(url&&url!=='#'&&!url.endsWith('#')) addLink(a,url);}
     });
 
     doc.save('خطة-شهرية-'+name.replace(/\s+/g,'-')+'.pdf');
     showToast('تم التصدير بنجاح','success');
-
   }catch(err){
     console.error('Export error:',err);
     showToast('حدث خطأ أثناء التصدير','error');
