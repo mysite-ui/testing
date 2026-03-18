@@ -256,12 +256,6 @@ for(let w=1;w<=4;w++) for(let l=1;l<=2;l++)
 function autoResize(ta){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';}
 function resizeAll(){document.querySelectorAll('#planBody textarea,#assessment').forEach(autoResize);}
 
-function offsetRelTo(el,ancestor){
-  let top=0,left=0;
-  while(el&&el!==ancestor){top+=el.offsetTop;left+=el.offsetLeft;el=el.offsetParent;}
-  return{top,left};
-}
-
 // ── URL Widget ─────────────────────────────────────────────────────────────────
 function wireUrlWidget(widget,onChange){
   const inp=widget.querySelector('.url-inp');
@@ -289,7 +283,7 @@ function wireUrlWidget(widget,onChange){
 
 wireUrlWidget(document.getElementById('assessUrlWidget'));
 
-// ── Homework Widget — text becomes clickable link ─────────────────────────────────────────
+// ── Homework Widget ────────────────────────────────────────────────────────────
 function wireHomeworkWidget(cont,item){
   const ta        = cont.querySelector('.hw-text');
   const urlInp    = cont.querySelector('.hw-url-inp');
@@ -325,19 +319,16 @@ function wireHomeworkWidget(cont,item){
     if(url) showLinkMode(); else showEditMode();
   }
 
-  // Textarea changes
   ta.addEventListener('input', e=>{
     item.homeworkText = e.target.value;
     autoResize(e.target);
   });
 
-  // URL input
   urlInp.addEventListener('blur', commitUrl);
   urlInp.addEventListener('keydown', e=>{
     if(e.key==='Enter'){e.preventDefault();commitUrl();}
   });
 
-  // Edit button inside the link chip
   editBtn.addEventListener('click', e=>{
     e.preventDefault();
     e.stopPropagation();
@@ -346,7 +337,6 @@ function wireHomeworkWidget(cont,item){
     urlInp.focus();
   });
 
-  // Init state
   if(item.homeworkUrl){ urlInp.value=item.homeworkUrl; showLinkMode(); }
   else showEditMode();
 }
@@ -439,7 +429,7 @@ function applyState(s){
   buildGrid();syncPreview();
 }
 
-// ── Hash encode/decode — LZ-compressed, ~60% smaller than plain base64 ────────
+// ── Hash encode/decode ─────────────────────────────────────────────────────────
 function stateToHash(s){
   try{
     const json=JSON.stringify(s);
@@ -450,12 +440,10 @@ function stateToHash(s){
 function hashToState(hash){
   try{
     if(!hash) return null;
-    // New compressed format
     if(hash.startsWith('#z:')){
       const json=LZString.decompressFromEncodedURIComponent(hash.slice(3));
       return JSON.parse(json);
     }
-    // Legacy uncompressed format (backward-compatible)
     if(hash.startsWith('#v1:')){
       return JSON.parse(decodeURIComponent(escape(atob(hash.slice(4)))));
     }
@@ -484,9 +472,8 @@ function handleReset(){
   showToast('تم المسح','success');
 }
 
-// ── URL Shortener — 3-service cascade ─────────────────────────────────────────
+// ── URL Shortener ──────────────────────────────────────────────────────────────
 async function shortenUrl(longUrl){
-  // 1. is.gd — CORS-friendly, returns JSON, produces ~20 char URLs
   try{
     const r=await fetch(
       'https://is.gd/create.php?format=json&url='+encodeURIComponent(longUrl),
@@ -497,8 +484,6 @@ async function shortenUrl(longUrl){
       if(d.shorturl) return{url:d.shorturl,service:'is.gd'};
     }
   }catch(e){}
-
-  // 2. TinyURL — plain text response
   try{
     const r=await fetch(
       'https://tinyurl.com/api-create.php?url='+encodeURIComponent(longUrl),
@@ -509,8 +494,6 @@ async function shortenUrl(longUrl){
       if(t&&t.startsWith('http')) return{url:t.trim(),service:'TinyURL'};
     }
   }catch(e){}
-
-  // 3. cleanuri.com — POST, JSON
   try{
     const r=await fetch('https://cleanuri.com/api/v1/shorten',{
       method:'POST',
@@ -523,7 +506,6 @@ async function shortenUrl(longUrl){
       if(d.result_url) return{url:d.result_url,service:'cleanuri'};
     }
   }catch(e){}
-
   return{url:longUrl,service:null};
 }
 
@@ -592,21 +574,10 @@ async function handleExport(){
   const A4_W_PT=841.89, A4_H_PT=595.28;
   const RENDER_W=1123;
 
-  // Measure offsetTop/offsetLeft relative to ancestor — scroll-independent
-  function offsetRelTo(el, ancestor){
-    let top=0, left=0;
-    while(el && el!==ancestor){
-      top  += el.offsetTop;
-      left += el.offsetLeft;
-      el    = el.offsetParent;
-    }
-    return {top, left};
-  }
-
   try{
     const wrap=document.getElementById('tplWrap');
 
-    // ── 1. Apply compact CSS to live DOM ─────────────────────────────────────
+    // ── 1. Compact CSS ────────────────────────────────────────────────────────
     const compactStyle=document.createElement('style');
     compactStyle.id='__pdf_compact__';
     compactStyle.textContent=`
@@ -629,40 +600,50 @@ async function handleExport(){
     `;
     document.head.appendChild(compactStyle);
 
-    // ── 2. Force wrap to RENDER_W so layout equals what canvas will capture ───
+    // ── 2. Fix wrap width ────────────────────────────────────────────────────
     const origStyle=wrap.style.cssText;
     wrap.style.cssText=origStyle+
       ';width:'+RENDER_W+'px!important'+
       ';min-width:'+RENDER_W+'px!important'+
       ';max-width:'+RENDER_W+'px!important';
 
-    // Force reflow
+    // Force reflow so layout settles before we measure
     void wrap.offsetHeight;
 
-    // ── 3. Measure links using offsetRelTo — purely layout-based, no scroll ───
-    const linkData=[];
+    // ── 3. Collect link rects AFTER reflow, relative to wrap ─────────────────
+    // FIX: Use getBoundingClientRect diff (scroll-independent, post-reflow accurate)
+    // instead of offsetParent chain which can be thrown off by transforms/position.
+    const wrapRect = wrap.getBoundingClientRect();
+    const linkData = [];
 
-    function recordLink(el, url){
-      if(!el||!url||url==='#'||url.endsWith('#')) return;
-      const pos=offsetRelTo(el, wrap);
+    function recordLinkEl(el, url){
+      if(!el || !url || url==='#' || url.endsWith('#')) return;
+      const r = el.getBoundingClientRect();
+      // coords relative to wrap top-left, in screen px
+      // then we divide by devicePixelRatio-independent layout px
       linkData.push({
-        x: pos.left,
-        y: pos.top,
-        w: el.offsetWidth,
-        h: el.offsetHeight,
+        x: r.left - wrapRect.left,
+        y: r.top  - wrapRect.top,
+        w: r.width,
+        h: r.height,
         url
       });
     }
 
-    wrap.querySelectorAll('.hw-link-anchor').forEach(a=>{
-      const disp=a.closest('.hw-link-disp');
-      if(disp && disp.style.display==='flex' && a.href && !a.href.endsWith('#'))
-        recordLink(a, a.href);
+    // Homework links
+    wrap.querySelectorAll('.hw-link-disp').forEach(disp=>{
+      if(disp.style.display !== 'flex') return;
+      const anchor = disp.querySelector('.hw-link-anchor');
+      if(anchor && anchor.href && !anchor.href.endsWith('#'))
+        recordLinkEl(disp, anchor.href);
     });
-    wrap.querySelectorAll('.url-display').forEach(a=>{
-      if(a.style.display==='flex' && a.href && !a.href.endsWith('#'))
-        recordLink(a, a.href);
-    });
+
+    // Assessment link
+    const assessDisp = document.querySelector('#assessUrlWidget .url-display');
+    if(assessDisp && assessDisp.style.display === 'flex' &&
+       assessDisp.href && !assessDisp.href.endsWith('#')){
+      recordLinkEl(assessDisp, assessDisp.href);
+    }
 
     // ── 4. Capture canvas ─────────────────────────────────────────────────────
     const canvas=await html2canvas(wrap,{
@@ -681,23 +662,77 @@ async function handleExport(){
           ';height:auto!important'+
           ';overflow:visible!important'
         );
-        // Textareas → divs
+
+        // FIX: Convert textareas → divs while preserving their contribution to
+        // layout height (so assessment section is never clipped/hidden).
         clonedDoc.querySelectorAll('textarea').forEach(ta=>{
           const div=clonedDoc.createElement('div');
-          div.style.cssText='font-family:Cairo,sans-serif;font-size:9px;font-weight:600;color:#1a2840;line-height:1.3;white-space:pre-wrap;word-break:break-word;width:100%;padding:0;direction:rtl;text-align:right;background:transparent;';
-          div.textContent=ta.value;
-          ta.parentNode.replaceChild(div,ta);
+          div.style.cssText=[
+            'font-family:Cairo,sans-serif',
+            'font-size:9px',
+            'font-weight:600',
+            'color:#1a2840',
+            'line-height:1.3',
+            'white-space:pre-wrap',
+            'word-break:break-word',
+            'width:100%',
+            'padding:0',
+            'direction:rtl',
+            'text-align:right',
+            'background:transparent',
+            // Ensure the div is always visible and takes up space
+            'display:block',
+            'min-height:1em',
+            'overflow:visible'
+          ].join(';');
+          div.textContent = ta.value;
+          ta.parentNode.replaceChild(div, ta);
         });
-        // Hide URL inputs, edit buttons
+
+        // FIX: Ensure assessment container and its parent are always visible
+        // regardless of content (fixes disappearing assessment section).
+        const assessBody = clonedDoc.querySelector('.tpl-assess-body');
+        if(assessBody){
+          assessBody.style.cssText += ';display:block!important;overflow:visible!important;min-height:40px!important;';
+        }
+        const assessBar = clonedDoc.querySelector('.tpl-assess-bar');
+        if(assessBar){
+          assessBar.style.cssText += ';display:block!important;';
+        }
+        const assessContainer = clonedDoc.querySelector('.assessment-container');
+        if(assessContainer){
+          assessContainer.style.cssText += ';display:flex!important;flex-direction:column!important;overflow:visible!important;';
+        }
+        const assessTextarea = clonedDoc.querySelector('#assessment');
+        if(assessTextarea){
+          // Already replaced above, but just in case
+          assessTextarea.style.cssText += ';display:block!important;overflow:visible!important;';
+        }
+
+        // Hide URL input fields (edit mode inputs), keep only displayed links
         clonedDoc.querySelectorAll('.hw-url-inp').forEach(i=>i.style.display='none');
         clonedDoc.querySelectorAll('.hw-edit-btn').forEach(i=>i.style.display='none');
+
+        // FIX: For url-widget (assessment link), only hide the input,
+        // never hide the whole widget — the textarea replacement above already
+        // handles that the div takes correct space.
         clonedDoc.querySelectorAll('.url-widget').forEach(wgt=>{
-          const inp=wgt.querySelector('.url-inp');
-          const disp=wgt.querySelector('.url-display');
+          const inp  = wgt.querySelector('.url-inp');
+          const disp = wgt.querySelector('.url-display');
           if(inp) inp.style.display='none';
-          if(!disp||disp.style.display!=='flex'){wgt.style.display='none';return;}
-          const edit=disp.querySelector('.url-edit');
-          if(edit) edit.style.display='none';
+          if(disp && disp.style.display==='flex'){
+            // Visible link chip — hide only the edit button
+            const edit=disp.querySelector('.url-edit');
+            if(edit) edit.style.display='none';
+          } else {
+            // No active link — hide the whole widget but keep the space
+            // via an invisible placeholder so layout isn't disrupted
+            wgt.style.visibility='hidden';
+            wgt.style.height='0';
+            wgt.style.margin='0';
+            wgt.style.padding='0';
+            wgt.style.overflow='hidden';
+          }
         });
       }
     });
@@ -707,12 +742,10 @@ async function handleExport(){
     document.head.removeChild(compactStyle);
 
     // ── 6. Compute PDF dimensions ─────────────────────────────────────────────
-    // canvas captured at RENDER_W px wide (scale=2, so canvas.width = RENDER_W*2)
-    const naturalW = canvas.width  / 2;   // = RENDER_W
-    const naturalH = canvas.height / 2;   // = actual layout height in px
+    const naturalW = canvas.width  / 2;
+    const naturalH = canvas.height / 2;
 
-    // ratio: 1 DOM px → this many PDF points
-    const ratio = A4_W_PT / naturalW;     // same as A4_W_PT / RENDER_W
+    const ratio = A4_W_PT / naturalW;
     const imgW  = A4_W_PT;
     const imgH  = naturalH * ratio;
     const offY  = imgH < A4_H_PT ? (A4_H_PT - imgH) / 2 : 0;
@@ -723,9 +756,9 @@ async function handleExport(){
     doc.addImage(imgData,'JPEG', 0, offY, imgW, imgH);
 
     // ── 7. Add clickable link annotations ─────────────────────────────────────
-    // linkData coords are in DOM px at RENDER_W width.
-    // PDF image is at x=0, y=offY, width=imgW=A4_W_PT.
-    // One px = ratio pt. Simple linear mapping.
+    // linkData x/y are in live-DOM layout pixels at RENDER_W width.
+    // The canvas was captured from the same layout (same width forced).
+    // Mapping: pdf_x = x * ratio, pdf_y = offY + y * ratio
     linkData.forEach(({x,y,w,h,url})=>{
       doc.link(
         x * ratio,
