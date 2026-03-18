@@ -412,78 +412,22 @@ function handleReset(){
   showToast('تم المسح','success');
 }
 
-// ── URL Shortener — 3-service cascade ─────────────────────────────────────────
-async function shortenUrl(longUrl){
-  // 1. is.gd — CORS-friendly, returns JSON, produces ~20 char URLs
-  try{
-    const r=await fetch(
-      'https://is.gd/create.php?format=json&url='+encodeURIComponent(longUrl),
-      {signal:AbortSignal.timeout(5000)}
-    );
-    if(r.ok){
-      const d=await r.json();
-      if(d.shorturl) return{url:d.shorturl,service:'is.gd'};
-    }
-  }catch(e){}
-
-  // 2. TinyURL — plain text response
-  try{
-    const r=await fetch(
-      'https://tinyurl.com/api-create.php?url='+encodeURIComponent(longUrl),
-      {signal:AbortSignal.timeout(5000)}
-    );
-    if(r.ok){
-      const t=await r.text();
-      if(t&&t.startsWith('http')) return{url:t.trim(),service:'TinyURL'};
-    }
-  }catch(e){}
-
-  // 3. cleanuri.com — POST, JSON
-  try{
-    const r=await fetch('https://cleanuri.com/api/v1/shorten',{
-      method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:'url='+encodeURIComponent(longUrl),
-      signal:AbortSignal.timeout(5000)
-    });
-    if(r.ok){
-      const d=await r.json();
-      if(d.result_url) return{url:d.result_url,service:'cleanuri'};
-    }
-  }catch(e){}
-
-  return{url:longUrl,service:null};
-}
-
-// ── Share ──────────────────────────────────────────────────────────────────────
-async function handleShare(){
+// ── Share — direct compressed link, zero redirects ────────────────────────────
+function handleShare(){
   const state=collectState();
   const hash=stateToHash(state);
-  const longUrl=location.origin+location.pathname+location.search+hash;
+  const directUrl=location.origin+location.pathname+location.search+hash;
 
-  // Open modal immediately with spinner
   const inp=document.getElementById('shareInp');
   const status=document.getElementById('shareStatus');
   const copyBtn=document.getElementById('copyBtn');
-  inp.value='⏳ جارٍ الاختصار…';
-  inp.style.color='var(--muted)';
-  status.textContent='';
-  status.className='share-status';
+  inp.value=directUrl;
+  inp.style.color='';
+  status.textContent='✓ رابط مباشر — يفتح الخطة فوراً بدون إعادة توجيه';
+  status.className='share-status ok';
   copyBtn.textContent='نسخ';
   copyBtn.classList.remove('copied');
   document.getElementById('shareModal').classList.add('open');
-
-  const {url,service}=await shortenUrl(longUrl);
-  inp.value=url;
-  inp.style.color='';
-
-  if(service){
-    status.textContent='✓ تم الاختصار بواسطة '+service;
-    status.className='share-status ok';
-  }else{
-    status.textContent='تعذّر الاختصار — تم نسخ الرابط الكامل';
-    status.className='share-status err';
-  }
 }
 
 function closeShareModal(e){
