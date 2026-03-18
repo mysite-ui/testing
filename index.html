@@ -574,16 +574,17 @@ async function handleExport(){
   const A4_W_PT=841.89, A4_H_PT=595.28;
   const RENDER_W=1123;
 
-  // Offscreen sandbox — position it far off-screen so it never affects layout
-  // but is still "in the document" so html2canvas can measure it fully.
+  // Offscreen sandbox — position:absolute so it participates in document flow
+  // and browser gives correct offsetHeight/scrollHeight for the full content.
+  // position:fixed would clip height to the viewport — that's the bug.
   const sandbox=document.createElement('div');
   sandbox.style.cssText=[
-    'position:fixed',
-    'top:0','left:-9999px',
+    'position:absolute',
+    'top:0',
+    'left:-9999px',
     'width:'+RENDER_W+'px',
     'overflow:visible',
-    'z-index:-1',
-    'background:#fff',
+    'visibility:hidden',
     'pointer-events:none'
   ].join(';');
   document.body.appendChild(sandbox);
@@ -700,8 +701,11 @@ async function handleExport(){
 
     sandbox.appendChild(clone);
 
-    // ── 2. Wait a frame so images load & layout settles ───────────────────────
-    await new Promise(r=>setTimeout(r,120));
+    // ── 2. Wait for images to load & layout to fully settle ──────────────────
+    await new Promise(r=>setTimeout(r,300));
+
+    // Force a reflow read so offsetHeight is accurate
+    const fullHeight = clone.offsetHeight;
 
     // ── 3. Collect link positions relative to clone ───────────────────────────
     const linkData=[];
@@ -734,7 +738,7 @@ async function handleExport(){
       logging:false,
       windowWidth:RENDER_W,
       width:RENDER_W,
-      height:clone.scrollHeight,   // ← capture FULL height, not viewport
+      height:fullHeight,   // ← full measured height, not viewport
       scrollX:0,
       scrollY:0
     });
