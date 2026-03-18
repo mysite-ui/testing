@@ -699,31 +699,26 @@ async function handleExport(){
       }
     });
 
-    // ── Scale canvas to fit A4 maintaining aspect ratio ─────────────────────
-    // canvas is at scale:2, so natural px = canvas.width/2 × canvas.height/2
+    // ── Scale to fill full A4 width, height follows proportionally ──────────
     const naturalW = canvas.width  / 2;
     const naturalH = canvas.height / 2;
 
-    // Fit inside A4 (never upscale)
-    const ratio = Math.min(A4_W_PT / naturalW, A4_H_PT / naturalH, 1);
-    const imgW  = naturalW * ratio;
-    const imgH  = naturalH * ratio;
-    // Center on page
-    const offX  = (A4_W_PT - imgW) / 2;
-    const offY  = (A4_H_PT - imgH) / 2;
+    // Always fill full A4 width — no side margins ever
+    const imgW = A4_W_PT;
+    const imgH = naturalH * (A4_W_PT / naturalW);
+    // Vertically center if shorter than A4, clip top=0 if taller
+    const offY = imgH < A4_H_PT ? (A4_H_PT - imgH) / 2 : 0;
 
     const imgData=canvas.toDataURL('image/jpeg',0.97);
     const{jsPDF}=window.jspdf;
     const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
-    doc.addImage(imgData,'JPEG',offX,offY,imgW,imgH);
+    doc.addImage(imgData,'JPEG',0,offY,imgW,imgH);
 
     // ── Link annotations ─────────────────────────────────────────────────────
-    // fx,fy are fractions of the LIVE wrap (before any scaling).
-    // The canvas captured the same content at the same proportions.
-    // After scaling: pdfX = offX + fx * imgW  (because imgW = naturalW * ratio
-    //   and the canvas image maps 1:1 to the wrap content proportionally)
+    // offX is always 0 (image starts at left edge).
+    // pdfX = fx * imgW,  pdfY = offY + fy * imgH
     linkData.forEach(({fx,fy,fw,fh,url})=>{
-      const pdfX = offX + fx * imgW;
+      const pdfX = fx * imgW;
       const pdfY = offY + fy * imgH;
       const pdfW = Math.max(fw * imgW, 30);
       const pdfH = Math.max(fh * imgH, 10);
