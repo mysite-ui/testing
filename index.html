@@ -1,38 +1,85 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>الخطة الشهرية - iLearn</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<title>iLearn Weekly Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --navy:#1a3a6b;--navy-dark:#102951;--navy-light:#2e5da8;
-  --blue-row:#3b82cc;--yellow:#f5c518;--orange:#f7941d;--red:#c0392b;
-  --white:#fff;--border:#c5d5e8;--bg:#eef3fa;--text:#1a2840;
-  --muted:#6b7a99;--cell-bg:#f7faff;--link:#0066cc;
+  --navy:#1a3a6b;
+  --navy-dark:#102951;
+  --navy-light:#2e5da8;
+  --yellow:#f5c518;
+  --yellow-dark:#e6b800;
+  --orange:#f7941d;
+  --red:#c0392b;
+  --pink-accent:#e91e8c;
+  --white:#fff;
+  --border:#c5d5e8;
+  --bg:#eef3fa;
+  --text:#1a2840;
+  --muted:#6b7a99;
+  --cell-bg:#f7faff;
 }
-body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 60px;direction:rtl;text-align:right;}
-.topbar{background:var(--navy-dark);padding:10px 32px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 3px 12px rgba(16,41,81,.35);}
-.topbar-brand{display:flex;align-items:center;}
+body{
+  font-family:'Cairo',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding:0 0 60px;
+}
+
+/* ── TOP NAV ── */
+.topbar{
+  background:var(--navy-dark);
+  padding:10px 32px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 3px 12px rgba(16,41,81,.35);
+}
+.topbar-brand{display:flex;align-items:center;gap:12px;}
 .topbar-right{display:flex;align-items:center;gap:10px;}
-.btn{font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;padding:9px 22px;border-radius:8px;border:none;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px;}
+.btn{
+  font-family:'Cairo',sans-serif;
+  font-size:13px;font-weight:700;
+  padding:9px 22px;
+  border-radius:8px;border:none;cursor:pointer;
+  transition:all .18s;
+  display:inline-flex;align-items:center;gap:8px;
+  letter-spacing:.2px;
+}
 .btn:active{transform:scale(.97);}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
 .btn-ghost{background:rgba(255,255,255,.1);color:var(--white);border:1.5px solid rgba(255,255,255,.22);}
 .btn-ghost:hover:not(:disabled){background:rgba(255,255,255,.18);}
-.btn-share{background:rgba(255,255,255,.15);color:var(--white);border:1.5px solid rgba(255,255,255,.35);font-size:13px;padding:9px 20px;}
-.btn-share:hover{background:rgba(255,255,255,.25);}
-.btn-export{background:linear-gradient(135deg,var(--yellow) 0%,var(--orange) 100%);color:var(--navy-dark);box-shadow:0 3px 14px rgba(245,197,24,.45);font-size:14px;padding:10px 26px;}
-.btn-export:hover:not(:disabled){box-shadow:0 5px 20px rgba(245,197,24,.55);transform:translateY(-1px);background:linear-gradient(135deg,#ffd11a 0%,#f98c0a 100%);}
-.page{max-width:1000px;margin:28px auto 0;padding:0 16px;display:flex;flex-direction:column;gap:14px;}
+.btn-export{
+  background:linear-gradient(135deg,var(--yellow) 0%,var(--orange) 100%);
+  color:var(--navy-dark);
+  box-shadow:0 3px 14px rgba(245,197,24,.45);
+  font-size:14px;padding:10px 26px;
+}
+.btn-export:hover:not(:disabled){
+  box-shadow:0 5px 20px rgba(245,197,24,.55);
+  transform:translateY(-1px);
+  background:linear-gradient(135deg,#ffd11a 0%,#f98c0a 100%);
+}
+
+/* ── PAGE ── */
+.page{max-width:900px;margin:28px auto 0;padding:0 16px;display:flex;flex-direction:column;gap:14px;}
+
+/* ── FORM CARD ── */
 .form-card{background:var(--white);border-radius:12px;box-shadow:0 2px 16px rgba(26,58,107,.1);overflow:hidden;}
-.form-card-header{background:linear-gradient(270deg,var(--navy) 0%,var(--navy-light) 100%);padding:14px 24px;display:flex;align-items:center;gap:10px;}
-.form-card-header h2{color:var(--white);font-size:15px;font-weight:800;}
+.form-card-header{
+  background:linear-gradient(90deg,var(--navy) 0%,var(--navy-light) 100%);
+  padding:14px 24px;display:flex;align-items:center;gap:10px;
+}
+.form-card-header h2{color:var(--white);font-size:15px;font-weight:800;letter-spacing:.3px;}
+
 /* ── GLOWING PULSING DOT ── */
 .form-card-header .dot{
   width:8px;height:8px;border-radius:50%;
@@ -44,63 +91,251 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
   0%,100%{box-shadow:0 0 4px 1px rgba(245,197,24,.5);transform:scale(1);}
   50%{box-shadow:0 0 10px 4px rgba(245,197,24,.85);transform:scale(1.25);}
 }
-.form-body{padding:20px 24px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:14px;}
+
+.form-body{
+  padding:20px 24px;
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;
+  gap:14px;
+}
 @media(max-width:680px){.form-body{grid-template-columns:1fr 1fr;}}
 .field{display:flex;flex-direction:column;gap:5px;}
-.field label{font-size:11px;font-weight:800;color:var(--navy);}
-.field input,.field select{font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;color:var(--text);background:var(--cell-bg);border:1.5px solid var(--border);border-radius:7px;padding:8px 11px;outline:none;transition:border .15s,box-shadow .15s;width:100%;direction:rtl;text-align:right;}
-.field input:focus,.field select:focus{border-color:var(--navy-light);box-shadow:0 0 0 3px rgba(46,93,168,.12);background:var(--white);}
+.field label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--navy);}
+.field input,.field select,.field textarea{
+  font-family:'Cairo',sans-serif;
+  font-size:13px;font-weight:600;
+  color:var(--text);
+  background:var(--cell-bg);
+  border:1.5px solid var(--border);
+  border-radius:7px;
+  padding:8px 11px;
+  outline:none;
+  transition:border .15s,box-shadow .15s;
+  width:100%;
+}
+.field textarea{resize:vertical;min-height:90px;line-height:1.6;}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--navy-light);
+  box-shadow:0 0 0 3px rgba(46,93,168,.12);
+  background:var(--white);
+}
+.field input.err{border-color:var(--red);animation:shake .3s;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+/* ── PREVIEW CARD ── */
 .preview-card{background:var(--white);border-radius:12px;box-shadow:0 2px 16px rgba(26,58,107,.1);overflow:hidden;}
 
-.tpl-wrap{width:100%;max-width:1123px;margin:0 auto;font-family:'Cairo',sans-serif;direction:rtl;}
-.tpl-header{display:grid;grid-template-columns:220px 1fr;border-bottom:2px solid var(--border);min-height:90px;}
-.tpl-logo-cell{padding:8px 14px;display:flex;align-items:center;justify-content:center;border-left:1.5px solid var(--border);background:var(--cell-bg);min-height:90px;overflow:hidden;}
-.tpl-info-panel{display:flex;flex-direction:column;}
-.info-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;height:100%;flex:1;}
-.info-field{display:flex;flex-direction:column;border-left:1.5px solid var(--border);}
-.info-field:last-child{border-left:none;}
-.info-label{background:var(--navy);color:var(--white);font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:6px 4px 5px;text-align:center;}
-.info-value{background:var(--white);display:flex;align-items:center;justify-content:center;padding:10px 8px;font-size:12px;font-weight:800;color:var(--red);flex:1;text-align:center;min-height:52px;}
-.tpl-title-bar{background:var(--navy);color:var(--white);text-align:center;font-size:18px;font-weight:900;padding:12px;}
-.tpl-grid-wrap{width:100%;overflow-x:auto;}
-.tpl-grid{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;direction:rtl;}
-.tpl-grid th{background:var(--cell-bg);color:var(--navy);font-weight:800;font-size:12px;text-align:center;padding:9px 6px;border:1.5px solid var(--border);word-break:break-word;}
-.tpl-grid th.th-timeline{color:var(--blue-row);width:130px;}
-.tpl-grid th.th-content{color:var(--blue-row);width:28%;}
-.tpl-grid th.th-outcomes{color:var(--blue-row);width:30%;}
-.tpl-grid th.th-homework{color:var(--blue-row);width:22%;}
-.tpl-grid td{border:1px solid var(--border);vertical-align:top;padding:0;}
-.week-cell{background:var(--cell-bg);color:var(--navy);font-weight:900;font-size:12px;text-align:center;width:68px;vertical-align:middle;padding:6px 4px;}
-.lesson-cell{background:var(--white);color:var(--text);font-size:11px;font-weight:700;text-align:center;width:62px;vertical-align:middle;padding:6px 4px;}
-.input-cell{background:var(--white);vertical-align:top;padding:6px 8px;}
-.homework-container,.assessment-container{display:flex;flex-direction:column;gap:5px;}
-.input-cell textarea,#assessment{font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;color:var(--text);background:transparent;border:none;outline:none;width:100%;min-height:44px;padding:0;resize:none;line-height:1.7;overflow:hidden;direction:rtl;text-align:right;}
-.input-cell textarea:focus,#assessment:focus{background:#eff6ff;}
-#assessment{min-height:60px;}
+/* ── REPORT TEMPLATE ── */
+.rpt{width:100%;font-family:'Cairo',sans-serif;}
 
-.url-widget{width:100%;}
-.url-inp{font-family:'Cairo',sans-serif;font-size:11px;color:var(--link);background:#f8fcff;padding:5px 8px;border:1px dashed #c5d5e8;border-radius:5px;width:100%;direction:ltr;text-align:left;outline:none;transition:border .15s;}
-.url-inp:focus{border-color:var(--navy-light);background:var(--white);}
-.url-inp::placeholder{color:#b8c8dc;font-size:10.5px;}
-.url-display{display:none;flex-direction:row;align-items:center;gap:5px;padding:4px 8px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:5px;text-decoration:none;cursor:pointer;width:100%;}
-.url-display:hover{background:#ddeeff;}
-.url-icon{font-size:13px;flex-shrink:0;line-height:1;}
-.url-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:left;font-size:11px;color:var(--link);text-decoration:underline;}
-.url-edit{flex-shrink:0;font-size:9px;color:var(--muted);padding:1px 5px;border-radius:3px;border:1px solid var(--border);background:var(--white);cursor:pointer;line-height:1.7;white-space:nowrap;}
-.url-edit:hover{background:var(--cell-bg);color:var(--navy);}
+/* Header */
+.rpt-header{
+  display:grid;
+  grid-template-columns:160px 1fr;
+  background:var(--white);
+  border-bottom:2px solid var(--border);
+}
+.rpt-logo-cell{
+  padding:14px 16px;
+  display:flex;align-items:center;justify-content:center;
+  border-right:1.5px solid var(--border);
+  min-height:90px;
+  background:var(--white);
+}
+.rpt-logo-cell img{
+  max-width:120px;
+  max-height:60px;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  display:block;
+}
+.rpt-title-area{
+  padding:16px 20px 10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;
+}
+.rpt-report-title{
+  font-size:26px;font-weight:900;
+  color:var(--pink-accent);
+  letter-spacing:.3px;
+}
 
-.hw-link-disp{display:none;align-items:center;gap:5px;padding:5px 8px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:5px;width:100%;margin-top:3px;}
-.hw-link-anchor{flex:1;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;color:var(--link);text-decoration:underline;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl;text-align:right;cursor:pointer;}
-.hw-link-anchor:hover{color:#004499;}
-.hw-edit-btn{flex-shrink:0;font-size:9px;color:var(--muted);padding:1px 5px;border-radius:3px;border:1px solid var(--border);background:var(--white);cursor:pointer;line-height:1.7;white-space:nowrap;}
-.hw-edit-btn:hover{background:var(--cell-bg);color:var(--navy);}
-.hw-url-inp{font-family:'Cairo',sans-serif;font-size:11px;color:var(--link);background:#f8fcff;padding:5px 8px;border:1px dashed #c5d5e8;border-radius:5px;width:100%;direction:ltr;text-align:left;outline:none;transition:border .15s;margin-top:3px;}
-.hw-url-inp:focus{border-color:var(--navy-light);background:var(--white);}
-.hw-url-inp::placeholder{color:#b8c8dc;font-size:10.5px;}
+/* Body grid */
+.rpt-body{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  align-items:start;
+  gap:0;
+  border-bottom:1px solid var(--border);
+}
+.rpt-section{padding:16px 20px;}
+.rpt-section-title{
+  font-size:14px;font-weight:900;
+  color:var(--pink-accent);
+  text-align:center;
+  margin-bottom:12px;
+  letter-spacing:.3px;
+}
 
+/* Student info card */
+.student-info-card{
+  background:var(--navy);
+  border-radius:8px;
+  overflow:hidden;
+}
+.student-name-row{
+  padding:10px 14px;
+  font-size:13px;font-weight:800;
+  color:var(--white);
+  border-bottom:1.5px solid rgba(255,255,255,.15);
+}
+.student-meta{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr 1fr;
+}
+.meta-cell{
+  padding:8px 6px;
+  font-size:11px;font-weight:800;
+  color:var(--white);
+  text-align:center;
+  border-right:1px solid rgba(255,255,255,.15);
+}
+.meta-cell:last-child{border-right:none;}
+
+/* Overview box */
+.overview-box{
+  border:2px solid var(--navy-light);
+  border-radius:8px;
+  padding:10px 12px;
+  font-size:12px;
+  font-weight:600;
+  color:var(--text);
+  min-height:72px;
+  line-height:1.6;
+  background:var(--cell-bg);
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.overview-box.empty{color:var(--muted);font-style:italic;}
+
+/* Checkboxes section */
+.rpt-checks{padding:0 20px 16px;}
+.check-item{margin-bottom:14px;}
+.check-question{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.check-options{display:flex;gap:20px;flex-wrap:wrap;}
+.check-opt{
+  display:flex;align-items:center;gap:7px;
+  font-size:12px;font-weight:600;color:var(--text);
+  cursor:pointer;user-select:none;
+  padding:4px 10px 4px 6px;
+  border-radius:6px;
+  border:1.5px solid transparent;
+  transition:background .15s,border-color .15s;
+}
+.check-opt:hover{background:rgba(26,58,107,.06);border-color:var(--border);}
+.check-opt input[type="checkbox"]{display:none;}
+.check-box-visual{
+  width:15px;height:15px;
+  border:2px solid var(--navy);
+  border-radius:3px;
+  background:var(--white);
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,border-color .15s;
+  font-size:10px;color:transparent;
+  line-height:1;
+}
+.check-opt.checked .check-box-visual{
+  background:var(--navy);
+  border-color:var(--navy);
+  color:var(--white);
+}
+.check-opt.checked{
+  background:rgba(26,58,107,.07);
+  border-color:var(--navy-light);
+  color:var(--navy);
+}
+
+/* Notes */
+.rpt-notes{padding:0 20px 16px;}
+.notes-title{
+  font-size:16px;font-weight:900;
+  color:var(--pink-accent);
+  text-align:center;
+  margin-bottom:10px;
+}
+.notes-box{
+  border:2px solid var(--navy);
+  border-radius:8px;
+  min-height:55px;
+  background:var(--cell-bg);
+  padding:10px 12px;
+  font-size:12px;color:var(--text);
+  white-space:pre-wrap;word-break:break-word;
+}
+.notes-box.empty{color:var(--muted);font-style:italic;}
+
+/* Footer */
+.rpt-footer{
+  background:var(--white);
+  border-top:2px solid var(--border);
+  padding:10px 20px;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* Divider between sections */
+.rpt-body{border-left:none;border-right:none;}
+.rpt-section:first-child{border-right:1px solid var(--border);}
+
+/* Action bar */
+.action-bar{
+  background:var(--white);
+  border-top:2px solid var(--border);
+  padding:14px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.action-left{font-size:12px;color:var(--muted);font-weight:600;}
+.action-right{display:flex;gap:10px;align-items:center;}
+
+/* Spin */
+.spin{display:inline-block;width:14px;height:14px;border:2.5px solid rgba(26,40,64,.2);border-top-color:var(--navy-dark);border-radius:50%;animation:spinning .65s linear infinite;}
+@keyframes spinning{to{transform:rotate(360deg)}}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:999;
+  background:var(--navy-dark);color:var(--white);
+  padding:11px 20px;border-radius:10px;
+  font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;
+  box-shadow:0 6px 24px rgba(16,41,81,.4);
+  opacity:0;transform:translateY(10px);
+  transition:all .25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{background:#14532d;border-left:4px solid #22c55e;}
+.toast.error{background:#7f1d1d;border-left:4px solid var(--red);}
+
+.overview-field{grid-column:1/-1;}
+.notes-field{grid-column:1/-1;}
+
+/* ── Page load animations ── */
+@keyframes card-enter{
+  0%  {opacity:0;transform:perspective(900px) rotateX(6deg) translateY(40px);}
+  100%{opacity:1;transform:perspective(900px) rotateX(0deg) translateY(0);}
+}
+.topbar      {animation:card-enter .8s cubic-bezier(.25,.46,.45,.94) both;}
+.form-card   {animation:card-enter .8s cubic-bezier(.25,.46,.45,.94) .18s both;}
+.preview-card{animation:card-enter .8s cubic-bezier(.25,.46,.45,.94) .34s both;}
+
+/* ── Share button ── */
+.btn-share{background:rgba(255,255,255,.15);color:var(--white);border:1.5px solid rgba(255,255,255,.35);font-size:13px;padding:9px 20px;}
+.btn-share:hover{background:rgba(255,255,255,.25);}
+
+/* ── Share modal ── */
 .modal-backdrop{position:fixed;inset:0;background:rgba(10,20,50,.55);z-index:800;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .modal-backdrop.open{opacity:1;pointer-events:all;}
-.modal{background:var(--white);border-radius:14px;padding:28px 28px 24px;max-width:480px;width:90%;box-shadow:0 16px 60px rgba(10,20,50,.3);transform:translateY(12px);transition:transform .2s;}
+.modal{background:var(--white);border-radius:14px;padding:28px 28px 24px;max-width:480px;width:90%;box-shadow:0 16px 60px rgba(10,20,50,.3);transform:translateY(12px);transition:transform .2s;position:relative;}
 .modal-backdrop.open .modal{transform:translateY(0);}
 .modal h3{font-size:16px;font-weight:900;color:var(--navy);margin-bottom:6px;}
 .modal p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;}
@@ -110,55 +345,36 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .btn-copy{font-family:'Cairo',sans-serif;font-size:12px;font-weight:800;padding:9px 18px;border-radius:7px;border:none;cursor:pointer;background:var(--navy);color:var(--white);white-space:nowrap;transition:background .15s;}
 .btn-copy:hover{background:var(--navy-light);}
 .btn-copy.copied{background:#14532d;}
-.modal-close{position:absolute;top:14px;left:18px;font-size:20px;background:none;border:none;cursor:pointer;color:var(--muted);line-height:1;}
+.modal-close{position:absolute;top:14px;right:18px;font-size:20px;background:none;border:none;cursor:pointer;color:var(--muted);line-height:1;}
 .modal-close:hover{color:var(--text);}
-.modal-wrap{position:relative;}
 .share-status{font-size:11px;color:var(--muted);margin-top:8px;text-align:center;min-height:18px;}
 .share-status.ok{color:#166534;}
 .share-status.err{color:var(--red);}
-
-.tpl-assess-bar{background:var(--yellow);color:var(--navy-dark);font-size:15px;font-weight:900;text-align:center;padding:10px;}
-.tpl-assess-body{padding:10px 14px;min-height:64px;border-top:1px solid var(--border);}
-.tpl-footer{background:var(--white);border-top:2px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:center;}
-.action-bar{background:var(--white);border-top:2px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
-.action-right{display:flex;gap:10px;align-items:center;}
-.spin{display:inline-block;width:14px;height:14px;border:2.5px solid rgba(26,40,64,.2);border-top-color:var(--navy-dark);border-radius:50%;animation:spinning .65s linear infinite;}
-@keyframes spinning{to{transform:rotate(360deg)}}
-.toast{position:fixed;bottom:24px;left:24px;z-index:999;background:var(--navy-dark);color:var(--white);padding:11px 20px;border-radius:10px;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;box-shadow:0 6px 24px rgba(16,41,81,.4);opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;}
-.toast.show{opacity:1;transform:translateY(0);}
-.toast.success{background:#14532d;border-right:4px solid #22c55e;}
-.toast.error{background:#7f1d1d;border-right:4px solid var(--red);}
-
-/* ── Page load animations ── */
-@keyframes card-enter{
-  0%  { opacity:0; transform:perspective(900px) rotateX(6deg) translateY(40px); }
-  100%{ opacity:1; transform:perspective(900px) rotateX(0deg) translateY(0);    }
-}
-.topbar      { animation:card-enter .8s cubic-bezier(.25,.46,.45,.94) both; }
-.form-card   { animation:card-enter .8s cubic-bezier(.25,.46,.45,.94) .18s both; }
-.preview-card{ animation:card-enter .8s cubic-bezier(.25,.46,.45,.94) .34s both; }
 </style>
 </head>
 <body>
 
+<!-- TOP NAV -->
 <nav class="topbar">
   <div class="topbar-brand"></div>
   <div class="topbar-right">
-    <button class="btn btn-ghost" onclick="handleReset()">&#x21BA; مسح</button>
-    <button class="btn btn-share" onclick="handleShare()">&#x1F517; مشاركة</button>
-    <button class="btn btn-export" id="exportBtn" onclick="handleExport()">&#x2193; تصدير PDF</button>
+    <button class="btn btn-ghost" onclick="handleReset()">↺ Clear</button>
+    <button class="btn btn-share" onclick="handleShare()">🔗 Share</button>
+    <button class="btn btn-export" id="exportBtn" onclick="handleExport()">
+      <span id="exportIcon">↓</span> Export PDF
+    </button>
   </div>
 </nav>
 
-<!-- Share modal -->
+<!-- Share Modal -->
 <div class="modal-backdrop" id="shareModal" onclick="closeShareModal(event)">
-  <div class="modal modal-wrap">
-    <button class="modal-close" onclick="document.getElementById('shareModal').classList.remove('open')">&#x2715;</button>
-    <h3>&#x1F517; مشاركة الخطة</h3>
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('shareModal').classList.remove('open')">✕</button>
+    <h3>🔗 Share Report</h3>
     <p> </p>
     <div class="share-row">
       <input class="share-inp" id="shareInp" type="text" readonly value="" onclick="this.select()"/>
-      <button class="btn-copy" id="copyBtn" onclick="copyShareLink()">نسخ</button>
+      <button class="btn-copy" id="copyBtn" onclick="copyShareLink()">Copy</button>
     </div>
     <div class="share-status" id="shareStatus"></div>
   </div>
@@ -166,474 +382,521 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <div class="page">
 
+  <!-- FORM -->
   <div class="form-card">
     <div class="form-card-header">
       <div class="dot"></div>
-      <h2>تفاصيل الخطة</h2>
+      <h2>Report Details</h2>
     </div>
     <div class="form-body">
-      <div class="field"><label>اسم الطالب</label><input id="studentName" type="text" placeholder="اسم الطالب" value=""/></div>
-      <div class="field"><label>الصف</label><select id="grade"></select></div>
-      <div class="field"><label>الشهر</label><select id="month"></select></div>
-      <div class="field"><label>المادة</label><select id="subject">
-        <option value="اللغة العربية">اللغة العربية</option>
-        <option value="القرآن الكريم">القرآن الكريم</option>
+      <div class="field">
+        <label>Student Name</label>
+        <input id="studentName" type="text" placeholder="student name" value=""/>
+      </div>
+      <div class="field">
+        <label>Subject</label>
+        <select id="subject">
+          <option value="Science">Science</option>
+          <option value="English">English</option>
+          <option value="Math">Math</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Grade</label>
+        <select id="grade"></select>
+      </div>
+      <div class="field">
+        <label>Week</label>
+        <select id="week"></select>
+      </div>
+      <div class="field">
+        <label>Month</label>
+        <select id="month"></select>
+      </div>
+      <div class="field">
+        <label>Year</label>
+        <select id="year"></select>
+      </div>
 
-      </select></div>
-      <div class="field"><label>السنة</label><input id="year" type="number" min="2020" max="2099" placeholder="2025"/></div>
+      <div class="field overview-field">
+        <label>Overview</label>
+        <textarea id="overview" placeholder="This week, we covered the lessons outlined in the weekly plan (lesson names). In addition, we practiced these topics through exercises and worksheets to ensure a clear understanding of the concepts." rows="4"></textarea>
+      </div>
+
+      <div class="field notes-field">
+        <label>Notes</label>
+        <textarea id="notes" placeholder="Write any additional notes here…" rows="3"></textarea>
+      </div>
     </div>
   </div>
 
+  <!-- PREVIEW -->
   <div class="preview-card">
-    <div class="tpl-wrap" id="tplWrap">
+    <div class="rpt">
 
-      <div class="tpl-header">
-        <div class="tpl-logo-cell">
-          <img src="./Logo-white(1).jpg" alt="الشعار" style="max-width:180px;max-height:74px;width:auto;height:auto;object-fit:contain;display:block;"/>
-        </div>
-        <div class="tpl-info-panel">
-          <div class="info-row">
-            <div class="info-field"><div class="info-label">اسم الطالب</div><div class="info-value" id="preview-name">—</div></div>
-            <div class="info-field"><div class="info-label">الشهر</div><div class="info-value" id="preview-month">—</div></div>
-            <div class="info-field"><div class="info-label">المادة</div><div class="info-value" id="preview-subject">—</div></div>
-            <div class="info-field"><div class="info-label">الصف</div><div class="info-value" id="preview-grade">—</div></div>
+      <!-- Header -->
+      <div class="rpt-header">
+        <div class="rpt-logo-cell">
+          <img id="logoImg" src="./Logo-white(1).jpg" alt="iLearn Logo"
+               onerror="this.style.display='none';document.getElementById('logoFallback').style.display='flex'"/>
+          <div id="logoFallback" style="display:none;width:120px;height:60px;border:2px dashed var(--border);border-radius:8px;align-items:center;justify-content:center;color:var(--muted);font-size:11px;font-weight:700;text-align:center;line-height:1.4;">
+            Logo<br/>Here
           </div>
         </div>
-      </div>
-
-      <div class="tpl-title-bar">الخطة الشهرية</div>
-
-      <div class="tpl-grid-wrap">
-        <table class="tpl-grid">
-          <colgroup><col style="width:68px"/><col style="width:62px"/><col/><col/><col/></colgroup>
-          <thead>
-            <tr>
-              <th class="th-timeline" colspan="2">الجدول الزمني</th>
-              <th class="th-content">المحتوى</th>
-              <th class="th-outcomes">نواتج التعلم</th>
-              <th class="th-homework">الواجب المنزلي</th>
-            </tr>
-          </thead>
-          <tbody id="planBody"></tbody>
-        </table>
-      </div>
-
-      <div class="tpl-assess-bar">التقييم</div>
-      <div class="tpl-assess-body">
-        <div class="assessment-container">
-          <textarea id="assessment" placeholder="اكتب التقييم الشهري، نقاط القوة، الأهداف والملاحظات…"></textarea>
-          <div class="url-widget" id="assessUrlWidget">
-            <input class="url-inp" type="url" placeholder="أضف رابطاً للتقييم (اختياري)" />
-            <a class="url-display" href="#" target="_blank" rel="noopener">
-              <span class="url-icon">🔗</span>
-              <span class="url-label"></span>
-              <span class="url-edit">تعديل</span>
-            </a>
-          </div>
+        <div class="rpt-title-area">
+          <div class="rpt-report-title">Weekly Report</div>
         </div>
       </div>
 
-      <div class="tpl-footer">
-        <img src="./logo2.jpg" alt="معلومات الاتصال" style="max-height:50px;max-width:100%;width:auto;height:auto;object-fit:contain;display:block;"/>
+      <!-- Student + Overview -->
+      <div class="rpt-body">
+        <div class="rpt-section">
+          <div class="rpt-section-title">Student</div>
+          <div class="student-info-card">
+            <div class="student-name-row" id="prev-name">student name</div>
+            <div class="student-meta">
+              <div class="meta-cell" id="prev-subject">Science</div>
+              <div class="meta-cell" id="prev-grade">Grade 1</div>
+              <div class="meta-cell" id="prev-week">Week 1</div>
+              <div class="meta-cell" id="prev-month">February</div>
+              <div class="meta-cell" id="prev-year">2026</div>
+            </div>
+          </div>
+        </div>
+        <div class="rpt-section">
+          <div class="rpt-section-title">Overview</div>
+          <div class="overview-box empty" id="prev-overview">Overview will appear here…</div>
+        </div>
       </div>
 
+      <!-- Checkboxes -->
+      <div class="rpt-checks" id="checksContainer"></div>
+
+      <!-- Notes -->
+      <div class="rpt-notes">
+        <div class="notes-title">Notes</div>
+        <div class="notes-box empty" id="prev-notes">Notes will appear here…</div>
+      </div>
+
+      <!-- Footer -->
+      <div class="rpt-footer">
+        <img src="./logo2.jpg" alt="iLearn Contact Info" style="max-height:56px;width:auto;object-fit:contain;display:block;"/>
+      </div>
     </div>
 
+    <!-- Action bar -->
     <div class="action-bar">
-      <div></div>
+      <div class="action-left"></div>
       <div class="action-right">
-        <button class="btn btn-ghost" style="color:var(--navy);border-color:var(--border);" onclick="handleReset()">مسح الكل</button>
-        <button class="btn btn-share" style="color:var(--navy);border-color:var(--border);background:#f0f5ff;" onclick="handleShare()">&#x1F517; مشاركة</button>
-        <button class="btn btn-export" id="exportBtn2" onclick="handleExport()">&#x2193; تصدير PDF</button>
+        <button class="btn btn-ghost" style="color:var(--navy);border-color:var(--border);" onclick="handleReset()">Clear all</button>
+        <button class="btn btn-share" style="color:var(--navy);border-color:var(--border);background:#f0f5ff;" onclick="handleShare()">🔗 Share</button>
+        <button class="btn btn-export" id="exportBtn2" onclick="handleExport()">
+          <span>↓</span> Export PDF
+        </button>
       </div>
     </div>
   </div>
 
 </div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Dropdowns ──────────────────────────────────────────────────────────────────
-const MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+// ── Checkbox data & state ──────────────────────────────────────────────────
+const CHECKS=[
+  {q:"The student was on time and did not leave the class without the teacher's permission.",opts:['Excellent','Satisfactory','Needs Improvement']},
+  {q:"The student kept the camera on and sat properly throughout the lesson.",opts:['Constantly','Sometimes','Rarely']},
+  {q:"The student completed and submitted the homework on time.",opts:['Excellent','Satisfactory','Needs Improvement']},
+  {q:"The student stayed focused and avoided distractions.",opts:['Excellent','Satisfactory','Needs Improvement']},
+  {q:"The student participated actively and asked questions when needed.",opts:['Excellent','Satisfactory','Needs Improvement']},
+  {q:"The student showed understanding of the topics covered during the lesson.",opts:['Excellent','Satisfactory','Needs Improvement']},
+];
+const checkedState=CHECKS.map(()=>null);
+
+function buildChecks(){
+  const container=document.getElementById('checksContainer');
+  container.innerHTML='';
+  CHECKS.forEach((item,ri)=>{
+    const itemDiv=document.createElement('div');
+    itemDiv.className='check-item';
+    const qDiv=document.createElement('div');
+    qDiv.className='check-question';
+    qDiv.textContent=item.q;
+    itemDiv.appendChild(qDiv);
+    const optsDiv=document.createElement('div');
+    optsDiv.className='check-options';
+    item.opts.forEach(opt=>{
+      const label=document.createElement('label');
+      const isChecked=checkedState[ri]===opt;
+      label.className='check-opt'+(isChecked?' checked':'');
+      const visual=document.createElement('span');
+      visual.className='check-box-visual';
+      visual.textContent=isChecked?'✓':'';
+      label.appendChild(visual);
+      label.appendChild(document.createTextNode(opt));
+      label.addEventListener('click',()=>{
+        checkedState[ri]=(checkedState[ri]===opt)?null:opt;
+        buildChecks();
+      });
+      optsDiv.appendChild(label);
+    });
+    itemDiv.appendChild(optsDiv);
+    container.appendChild(itemDiv);
+  });
+}
+buildChecks();
+
+// ── Dropdowns ──────────────────────────────────────────────────────────────
+const MONTHS=['January','February','March','April','May','June',
+              'July','August','September','October','November','December'];
 const gradeEl=document.getElementById('grade');
 const monthEl=document.getElementById('month');
-for(let g=1;g<=12;g++){const o=document.createElement('option');o.value=g;o.textContent='الصف '+g;if(g===5)o.selected=true;gradeEl.appendChild(o);}
-MONTHS_AR.forEach((m,i)=>{const o=document.createElement('option');o.value=m;o.textContent=m;if(i===new Date().getMonth())o.selected=true;monthEl.appendChild(o);});
-document.getElementById('year').value=new Date().getFullYear();
+const weekEl=document.getElementById('week');
+const yearEl=document.getElementById('year');
 
-// ── Grid state ─────────────────────────────────────────────────────────────────
-const grid=[];
-for(let w=1;w<=4;w++) for(let l=1;l<=2;l++)
-  grid.push({week:w,lesson:l,content:'',outcomes:'',homeworkText:'',homeworkUrl:''});
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-function autoResize(ta){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';}
-function resizeAll(){document.querySelectorAll('#planBody textarea,#assessment').forEach(autoResize);}
-
-// ── URL Widget ─────────────────────────────────────────────────────────────────
-function wireUrlWidget(widget,onChange){
-  const inp=widget.querySelector('.url-inp');
-  const disp=widget.querySelector('.url-display');
-  const label=widget.querySelector('.url-label');
-  const editBtn=widget.querySelector('.url-edit');
-
-  function normalise(v){v=(v||'').trim();if(v&&!/^https?:\/\//i.test(v))v='https://'+v;return v;}
-  function showLink(url){disp.href=url;label.textContent=url;inp.style.display='none';disp.style.display='flex';if(onChange)onChange(url);}
-  function showInput(){disp.style.display='none';inp.style.display='';if(onChange)onChange('');}
-  function commit(){const url=normalise(inp.value);if(url){inp.value=url;showLink(url);}else showInput();}
-
-  inp.addEventListener('blur',commit);
-  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commit();}});
-  editBtn.addEventListener('click',e=>{
-    e.preventDefault();e.stopPropagation();
-    inp.value=(disp.href==='#'||disp.href===location.href+'#')?'':disp.href;
-    showInput();
-  });
-
-  widget.getUrl=()=>(disp.style.display==='flex'&&disp.href!=='#'&&!disp.href.endsWith('#'))?disp.href:'';
-  widget.setUrl=(url)=>{if(url){inp.value=url;showLink(url);}else{inp.value='';showInput();}};
-  showInput();
+for(let g=1;g<=12;g++){
+  const o=document.createElement('option');
+  o.value=g;o.textContent='Grade '+g;
+  if(g===1) o.selected=true;
+  gradeEl.appendChild(o);
+}
+MONTHS.forEach((m,i)=>{
+  const o=document.createElement('option');
+  o.value=m;o.textContent=m;
+  if(i===new Date().getMonth()) o.selected=true;
+  monthEl.appendChild(o);
+});
+for(let w=1;w<=52;w++){
+  const o=document.createElement('option');
+  o.value=w;o.textContent='Week '+w;
+  if(w===1) o.selected=true;
+  weekEl.appendChild(o);
+}
+const currentYear=new Date().getFullYear();
+for(let y=currentYear-2;y<=currentYear+3;y++){
+  const o=document.createElement('option');
+  o.value=y;o.textContent=y;
+  if(y===currentYear) o.selected=true;
+  yearEl.appendChild(o);
 }
 
-wireUrlWidget(document.getElementById('assessUrlWidget'));
-
-// ── Homework Widget ─────────────────────────────────────────────────────────────
-function wireHomeworkWidget(cont,item){
-  const ta        = cont.querySelector('.hw-text');
-  const urlInp    = cont.querySelector('.hw-url-inp');
-  const linkDisp  = cont.querySelector('.hw-link-disp');
-  const linkAnchor= cont.querySelector('.hw-link-anchor');
-  const editBtn   = cont.querySelector('.hw-edit-btn');
-
-  function normalise(v){v=(v||'').trim();if(v&&!/^https?:\/\//i.test(v))v='https://'+v;return v;}
-
-  function updateAnchorLabel(){linkAnchor.textContent=item.homeworkText.trim()||item.homeworkUrl;}
-
-  function showLinkMode(){
-    updateAnchorLabel();
-    linkAnchor.href=item.homeworkUrl;
-    ta.style.display='none';
-    urlInp.style.display='none';
-    linkDisp.style.display='flex';
-  }
-
-  function showEditMode(){
-    ta.style.display='';
-    urlInp.style.display='';
-    linkDisp.style.display='none';
-    autoResize(ta);
-  }
-
-  function commitUrl(){
-    const url=normalise(urlInp.value);
-    urlInp.value=url;
-    item.homeworkUrl=url;
-    if(url)showLinkMode();else showEditMode();
-  }
-
-  ta.addEventListener('input',e=>{item.homeworkText=e.target.value;autoResize(e.target);});
-  urlInp.addEventListener('blur',commitUrl);
-  urlInp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commitUrl();}});
-  editBtn.addEventListener('click',e=>{
-    e.preventDefault();e.stopPropagation();
-    urlInp.value=item.homeworkUrl;
-    showEditMode();
-    urlInp.focus();
-  });
-
-  if(item.homeworkUrl){urlInp.value=item.homeworkUrl;showLinkMode();}
-  else showEditMode();
-}
-
-// ── Build grid ─────────────────────────────────────────────────────────────────
-function buildGrid(){
-  const tbody=document.getElementById('planBody');
-  tbody.innerHTML='';
-  for(let w=1;w<=4;w++){
-    for(let l=1;l<=2;l++){
-      const idx=(w-1)*2+(l-1);
-      const item=grid[idx];
-      const row=document.createElement('tr');
-      if(l===1){const wc=document.createElement('td');wc.className='week-cell';wc.rowSpan=2;wc.textContent='الأسبوع '+w;row.appendChild(wc);}
-      const lc=document.createElement('td');lc.className='lesson-cell';lc.textContent='الدرس '+l;row.appendChild(lc);
-
-      ['content','outcomes'].forEach(key=>{
-        const td=document.createElement('td');td.className='input-cell';
-        const ta=document.createElement('textarea');
-        ta.placeholder=key==='content'?'الموضوع…':'سيكون الطالب قادراً على…';
-        ta.value=item[key];
-        ta.addEventListener('input',e=>{item[key]=e.target.value;autoResize(e.target);});
-        td.appendChild(ta);row.appendChild(td);
-      });
-
-      const tdHw=document.createElement('td');tdHw.className='input-cell';
-      const cont=document.createElement('div');cont.className='homework-container';
-
-      const taHw=document.createElement('textarea');
-      taHw.className='hw-text';taHw.placeholder='الواجب…';taHw.value=item.homeworkText;
-
-      const urlInp=document.createElement('input');
-      urlInp.className='hw-url-inp';urlInp.type='url';urlInp.placeholder='أضف رابطاً (اختياري)';
-      urlInp.value=item.homeworkUrl||'';
-
-      const linkDisp=document.createElement('div');linkDisp.className='hw-link-disp';
-      const linkAnchor=document.createElement('a');linkAnchor.className='hw-link-anchor';linkAnchor.target='_blank';linkAnchor.rel='noopener';
-      const editBtn=document.createElement('span');editBtn.className='hw-edit-btn';editBtn.textContent='تعديل';
-      linkDisp.appendChild(linkAnchor);linkDisp.appendChild(editBtn);
-
-      cont.appendChild(taHw);cont.appendChild(urlInp);cont.appendChild(linkDisp);
-      tdHw.appendChild(cont);row.appendChild(tdHw);
-
-      wireHomeworkWidget(cont,item);
-      tbody.appendChild(row);
-    }
-  }
-  resizeAll();
-}
-buildGrid();
-
-// ── Preview sync ───────────────────────────────────────────────────────────────
+// ── Live sync ──────────────────────────────────────────────────────────────
 function syncPreview(){
-  document.getElementById('preview-name').textContent=document.getElementById('studentName').value||'—';
-  document.getElementById('preview-month').textContent=document.getElementById('month').value||'—';
-  document.getElementById('preview-subject').textContent=document.getElementById('subject').value||'—';
-  document.getElementById('preview-grade').textContent='الصف '+document.getElementById('grade').value;
+  const name=document.getElementById('studentName').value||'—';
+  document.getElementById('prev-name').textContent=name;
+  document.getElementById('prev-subject').textContent=document.getElementById('subject').value;
+  document.getElementById('prev-grade').textContent='Grade '+document.getElementById('grade').value;
+  document.getElementById('prev-week').textContent='Week '+document.getElementById('week').value;
+  document.getElementById('prev-month').textContent=document.getElementById('month').value;
+  document.getElementById('prev-year').textContent=document.getElementById('year').value;
+
+  const ov=document.getElementById('overview').value;
+  const ovEl=document.getElementById('prev-overview');
+  if(ov){ovEl.textContent=ov;ovEl.classList.remove('empty');}
+  else{ovEl.textContent='Overview will appear here…';ovEl.classList.add('empty');}
+
+  const nt=document.getElementById('notes').value;
+  const ntEl=document.getElementById('prev-notes');
+  if(nt){ntEl.textContent=nt;ntEl.classList.remove('empty');}
+  else{ntEl.textContent='Notes will appear here…';ntEl.classList.add('empty');}
 }
-['studentName','grade','month','subject','year'].forEach(id=>{
+
+['studentName','subject','grade','week','month','year'].forEach(id=>{
   document.getElementById(id).addEventListener('input',syncPreview);
   document.getElementById(id).addEventListener('change',syncPreview);
 });
+document.getElementById('overview').addEventListener('input',syncPreview);
+document.getElementById('notes').addEventListener('input',syncPreview);
 syncPreview();
 
-// ── Collect / restore state ────────────────────────────────────────────────────
+// ── Reset ──────────────────────────────────────────────────────────────────
+function handleReset(){
+  document.getElementById('studentName').value='';
+  document.getElementById('subject').value='Science';
+  document.getElementById('grade').value=1;
+  document.getElementById('week').value=1;
+  document.getElementById('month').value=MONTHS[new Date().getMonth()];
+  document.getElementById('year').value=new Date().getFullYear();
+  document.getElementById('overview').value='';
+  document.getElementById('notes').value='';
+  CHECKS.forEach((_,i)=>checkedState[i]=null);
+  buildChecks();syncPreview();
+  history.replaceState(null,'',location.pathname+location.search);
+  showToast('Cleared','success');
+}
+
+// ── Collect / restore state ────────────────────────────────────────────────
 function collectState(){
   return{
     n:document.getElementById('studentName').value,
-    g:document.getElementById('grade').value,
-    m:document.getElementById('month').value,
     s:document.getElementById('subject').value,
+    g:document.getElementById('grade').value,
+    w:document.getElementById('week').value,
+    m:document.getElementById('month').value,
     y:document.getElementById('year').value,
-    a:document.getElementById('assessment').value,
-    au:document.getElementById('assessUrlWidget').getUrl(),
-    r:grid.map(r=>({c:r.content,o:r.outcomes,h:r.homeworkText,u:r.homeworkUrl}))
+    ov:document.getElementById('overview').value,
+    nt:document.getElementById('notes').value,
+    ch:checkedState.slice()
   };
 }
-function applyState(s){
-  if(!s) return;
-  if(s.n!==undefined) document.getElementById('studentName').value=s.n;
-  if(s.g!==undefined) document.getElementById('grade').value=s.g;
-  if(s.m!==undefined) document.getElementById('month').value=s.m;
-  if(s.s!==undefined) document.getElementById('subject').value=s.s;
-  if(s.y!==undefined) document.getElementById('year').value=s.y;
-  if(s.a!==undefined) document.getElementById('assessment').value=s.a;
-  if(s.au)            document.getElementById('assessUrlWidget').setUrl(s.au);
-  if(s.r&&s.r.length===grid.length){
-    s.r.forEach((r,i)=>{grid[i].content=r.c||'';grid[i].outcomes=r.o||'';grid[i].homeworkText=r.h||'';grid[i].homeworkUrl=r.u||'';});
-  }
-  buildGrid();syncPreview();
+function applyState(st){
+  if(!st)return;
+  if(st.n!==undefined)document.getElementById('studentName').value=st.n;
+  if(st.s!==undefined)document.getElementById('subject').value=st.s;
+  if(st.g!==undefined)document.getElementById('grade').value=st.g;
+  if(st.w!==undefined)document.getElementById('week').value=st.w;
+  if(st.m!==undefined)document.getElementById('month').value=st.m;
+  if(st.y!==undefined)document.getElementById('year').value=st.y;
+  if(st.ov!==undefined)document.getElementById('overview').value=st.ov;
+  if(st.nt!==undefined)document.getElementById('notes').value=st.nt;
+  if(st.ch&&st.ch.length===checkedState.length)st.ch.forEach((v,i)=>checkedState[i]=v);
+  buildChecks();syncPreview();
 }
+function stateToHash(st){try{return '#z:'+LZString.compressToEncodedURIComponent(JSON.stringify(st));}catch(e){return '';}}
+function hashToState(hash){try{if(!hash)return null;if(hash.startsWith('#z:')){return JSON.parse(LZString.decompressFromEncodedURIComponent(hash.slice(3)));}return null;}catch(e){return null;}}
+(function(){const st=hashToState(location.hash);if(st)applyState(st);})();
 
-// ── Hash encode/decode ────────────────────────────────────────────────────────
-function stateToHash(s){
-  try{const json=JSON.stringify(s);const compressed=LZString.compressToEncodedURIComponent(json);return '#z:'+compressed;}catch(e){return '';}
-}
-function hashToState(hash){
-  try{
-    if(!hash)return null;
-    if(hash.startsWith('#z:')){const json=LZString.decompressFromEncodedURIComponent(hash.slice(3));return JSON.parse(json);}
-    if(hash.startsWith('#v1:')){return JSON.parse(decodeURIComponent(escape(atob(hash.slice(4)))));}
-    return null;
-  }catch(e){return null;}
-}
-
-(function(){const s=hashToState(location.hash);if(s)applyState(s);})();
-
-// ── Reset ──────────────────────────────────────────────────────────────────────
-function handleReset(){
-  document.getElementById('studentName').value='';
-  document.getElementById('grade').value=5;
-  document.getElementById('month').value=MONTHS_AR[new Date().getMonth()];
-  document.getElementById('subject').value='اللغة الإنجليزية';
-  document.getElementById('year').value=new Date().getFullYear();
-  document.getElementById('assessment').value='';
-  document.getElementById('assessUrlWidget').setUrl('');
-  grid.forEach(r=>{r.content='';r.outcomes='';r.homeworkText='';r.homeworkUrl='';});
-  buildGrid();syncPreview();
-  history.replaceState(null,'',location.pathname+location.search);
-  showToast('تم المسح','success');
-}
-
-// ── URL Shortener ─────────────────────────────────────────────────────────────
+// ── URL Shortener ──────────────────────────────────────────────────────────
 async function shortenUrl(longUrl){
   try{const r=await fetch('https://is.gd/create.php?format=json&url='+encodeURIComponent(longUrl),{signal:AbortSignal.timeout(5000)});if(r.ok){const d=await r.json();if(d.shorturl)return{url:d.shorturl,service:'is.gd'};}}catch(e){}
   try{const r=await fetch('https://tinyurl.com/api-create.php?url='+encodeURIComponent(longUrl),{signal:AbortSignal.timeout(5000)});if(r.ok){const t=await r.text();if(t&&t.startsWith('http'))return{url:t.trim(),service:'TinyURL'};}}catch(e){}
   try{const r=await fetch('https://cleanuri.com/api/v1/shorten',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'url='+encodeURIComponent(longUrl),signal:AbortSignal.timeout(5000)});if(r.ok){const d=await r.json();if(d.result_url)return{url:d.result_url,service:'cleanuri'};}}catch(e){}
   return{url:longUrl,service:null};
 }
-
-// ── Share ──────────────────────────────────────────────────────────────────────
 async function handleShare(){
-  const state=collectState();
-  const hash=stateToHash(state);
+  const hash=stateToHash(collectState());
   const longUrl=location.origin+location.pathname+location.search+hash;
   const inp=document.getElementById('shareInp');
   const status=document.getElementById('shareStatus');
   const copyBtn=document.getElementById('copyBtn');
-  inp.value='⏳ جارٍ الاختصار…';inp.style.color='var(--muted)';
+  inp.value='⏳ Shortening…';inp.style.color='var(--muted)';
   status.textContent='';status.className='share-status';
-  copyBtn.textContent='نسخ';copyBtn.classList.remove('copied');
+  copyBtn.textContent='Copy';copyBtn.classList.remove('copied');
   document.getElementById('shareModal').classList.add('open');
   const{url,service}=await shortenUrl(longUrl);
   inp.value=url;inp.style.color='';
-  if(service){status.textContent='✓ تم الاختصار بواسطة '+service;status.className='share-status ok';}
-  else{status.textContent='تعذّر الاختصار — تم نسخ الرابط الكامل';status.className='share-status err';}
+  if(service){status.textContent='✓ Shortened via '+service;status.className='share-status ok';}
+  else{status.textContent='Could not shorten — full link ready to copy';status.className='share-status err';}
 }
-
 function closeShareModal(e){if(e.target===document.getElementById('shareModal'))document.getElementById('shareModal').classList.remove('open');}
-
 function copyShareLink(){
   const inp=document.getElementById('shareInp');
   if(!inp.value||inp.value.startsWith('⏳'))return;
   inp.select();
   navigator.clipboard.writeText(inp.value).then(()=>{
-    const btn=document.getElementById('copyBtn');btn.textContent='✓ تم النسخ';btn.classList.add('copied');
-    setTimeout(()=>{btn.textContent='نسخ';btn.classList.remove('copied');},2200);
-  }).catch(()=>{document.execCommand('copy');showToast('تم نسخ الرابط','success');});
+    const btn=document.getElementById('copyBtn');btn.textContent='✓ Copied';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2200);
+  }).catch(()=>{document.execCommand('copy');showToast('Link copied','success');});
 }
 
-// ── Toast ──────────────────────────────────────────────────────────────────────
+// ── Toast ──────────────────────────────────────────────────────────────────
 let toastTimer;
 function showToast(msg,type='success'){
   const t=document.getElementById('toast');
   t.textContent=msg;t.className='toast '+type+' show';
-  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className='toast',2800);
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.className='toast',2800);
 }
 
-// ── Compact transforms for PDF ─────────────────────────────────────────────────
-const COMPACT_CSS=`
-  *{box-sizing:border-box!important;}
-  .tpl-wrap{max-width:794px!important;}
-  .tpl-header{display:grid!important;grid-template-columns:140px 1fr!important;min-height:52px!important;}
-  .tpl-logo-cell{min-height:52px!important;padding:3px 8px!important;}
-  .tpl-logo-cell img{max-width:110px!important;max-height:46px!important;}
-  .info-row{grid-template-columns:1fr 1fr 1fr 1fr!important;}
-  .info-label{font-size:7px!important;padding:2px 2px!important;}
-  .info-value{font-size:8.5px!important;padding:3px 3px!important;min-height:26px!important;}
-  .tpl-title-bar{font-size:11px!important;padding:4px!important;}
-  .tpl-grid td,.tpl-grid th{padding:2px 4px!important;font-size:7.5px!important;line-height:1.25!important;}
-  .tpl-grid th{padding:4px 4px!important;font-size:8px!important;}
-  .week-cell{font-size:7.5px!important;padding:2px 2px!important;width:48px!important;}
-  .lesson-cell{font-size:7.5px!important;padding:2px 2px!important;width:44px!important;}
-  .input-cell{padding:2px 5px!important;}
-  .tpl-grid-wrap{overflow:visible!important;}
-  .hw-link-disp{padding:1px 4px!important;margin-top:1px!important;}
-  .hw-link-anchor{font-size:7px!important;}
-  .hw-url-inp{display:none!important;}
-  .tpl-assess-bar{font-size:9px!important;padding:4px!important;}
-  .tpl-assess-body{padding:4px 8px!important;min-height:30px!important;}
-  .tpl-footer{padding:3px 10px!important;}
-  .tpl-footer img{max-height:36px!important;}
-`;
-const TA_STYLE='font-family:Cairo,sans-serif;font-size:7.5px;font-weight:600;color:#1a2840;line-height:1.25;white-space:pre-wrap;word-break:break-word;width:100%;padding:0;direction:rtl;text-align:right;background:transparent;';
-
-function applyCompactTransforms(root){
-  root.querySelectorAll('textarea').forEach(ta=>{
-    const div=root.ownerDocument?root.ownerDocument.createElement('div'):document.createElement('div');
-    div.style.cssText=TA_STYLE;div.textContent=ta.value;ta.parentNode.replaceChild(div,ta);
-  });
-  root.querySelectorAll('.hw-url-inp').forEach(i=>i.style.display='none');
-  root.querySelectorAll('.hw-link-disp').forEach(disp=>{
-    if(disp.style.display==='flex'){
-      disp.style.cssText='display:flex!important;align-items:center;gap:4px;padding:2px 6px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:4px;width:100%;margin-top:2px;';
-      const eb=disp.querySelector('.hw-edit-btn');if(eb)eb.style.display='none';
+// ── Image → base64 ────────────────────────────────────────────────────────
+function imgToBase64(imgEl){
+  return new Promise(resolve=>{
+    if(!imgEl||imgEl.style.display==='none'||!imgEl.complete||imgEl.naturalWidth===0)return resolve(null);
+    try{
+      const c=document.createElement('canvas');c.width=imgEl.naturalWidth;c.height=imgEl.naturalHeight;
+      c.getContext('2d').drawImage(imgEl,0,0);resolve(c.toDataURL('image/png'));
+    }catch(e){
+      fetch(imgEl.src).then(r=>r.blob()).then(blob=>{
+        const rd=new FileReader();rd.onloadend=()=>resolve(rd.result);rd.onerror=()=>resolve(null);rd.readAsDataURL(blob);
+      }).catch(()=>resolve(null));
     }
   });
-  root.querySelectorAll('.url-widget').forEach(wgt=>{
-    const inp=wgt.querySelector('.url-inp');
-    const disp=wgt.querySelector('.url-display');
-    if(inp)inp.style.display='none';
-    if(!disp||disp.style.display!=='flex'){wgt.style.display='none';return;}
-    disp.style.cssText='display:flex;align-items:center;gap:4px;padding:3px 6px;background:#edf5ff;border:1px solid #a0c4ff;border-radius:4px;text-decoration:none;width:100%;';
-    const lbl=disp.querySelector('.url-label');
-    if(lbl)lbl.style.cssText='flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:left;font-size:9px;color:#0066cc;text-decoration:underline;';
-    const edit=disp.querySelector('.url-edit');if(edit)edit.style.display='none';
-  });
 }
 
-// ── PDF Export ─────────────────────────────────────────────────────────────────
+// ── PDF Export — guaranteed single page, font scales to fit ───────────────
 async function handleExport(){
   const name=document.getElementById('studentName').value.trim();
-  if(!name){showToast('الرجاء إدخال اسم الطالب','error');return;}
-
+  if(!name){
+    const inp=document.getElementById('studentName');inp.classList.add('err');
+    setTimeout(()=>inp.classList.remove('err'),1200);
+    showToast('Please enter the student name','error');return;
+  }
   const btns=[document.getElementById('exportBtn'),document.getElementById('exportBtn2')];
-  btns.forEach(b=>{b.disabled=true;b.innerHTML='<span class="spin"></span> جارٍ الإنشاء…';});
-
-  const A4_W_PT=595.28,A4_H_PT=841.89;
-  const RENDER_W=794;
-  const SCALE=2;
+  btns.forEach(b=>{b.disabled=true;b.innerHTML='<span class="spin"></span> Generating…';});
+  await new Promise(r=>setTimeout(r,60));
 
   try{
-    const wrap=document.getElementById('tplWrap');
-    const measureClone=wrap.cloneNode(true);
-    const CLONE_ID='__pdf_measure_clone__';
-    measureClone.id=CLONE_ID;
-    measureClone.style.cssText='position:fixed!important;top:-99999px!important;left:0!important;width:'+RENDER_W+'px!important;min-width:'+RENDER_W+'px!important;max-width:'+RENDER_W+'px!important;overflow:visible!important;box-sizing:border-box!important;visibility:hidden!important;z-index:-9999!important;';
+    const logoBase64   = await imgToBase64(document.getElementById('logoImg'));
+    const footerBase64 = await imgToBase64(document.querySelector('.rpt-footer img'));
+    const data={
+      name,
+      subject : document.getElementById('subject').value,
+      grade   : 'Grade '+document.getElementById('grade').value,
+      week    : 'Week '+document.getElementById('week').value,
+      month   : document.getElementById('month').value,
+      year    : document.getElementById('year').value,
+      overview: document.getElementById('overview').value,
+      notes   : document.getElementById('notes').value,
+    };
 
-    const measureStyle=document.createElement('style');
-    measureStyle.id='__pdf_measure_style__';
-    const scopedCSS=COMPACT_CSS.replace(/\n\s*/g,' ').split('}').filter(r=>r.trim()).map(r=>{const[sel,decl]=r.split('{');if(!sel||!decl)return '';return '#'+CLONE_ID+' '+sel.trim()+'{'+decl+'}';}).join('\n');
-    measureStyle.textContent=scopedCSS;
-    document.head.appendChild(measureStyle);
-    document.body.appendChild(measureClone);
-    applyCompactTransforms(measureClone);
-    void measureClone.getBoundingClientRect();
-
-    const linkData=[];
-    const cloneRect=measureClone.getBoundingClientRect();
-    function recordLink(el,url){
-      if(!el||!url||url==='#'||url.endsWith('#'))return;
-      const r=el.getBoundingClientRect();
-      if(r.width<1||r.height<1)return;
-      linkData.push({fx:(r.left-cloneRect.left)/cloneRect.width,fy:(r.top-cloneRect.top)/cloneRect.height,fw:r.width/cloneRect.width,fh:r.height/cloneRect.height,url});
-    }
-    measureClone.querySelectorAll('.hw-link-anchor').forEach(a=>{const disp=a.closest('.hw-link-disp');if(disp&&getComputedStyle(disp).display==='flex'&&a.href&&!a.href.endsWith('#'))recordLink(a,a.href);});
-    measureClone.querySelectorAll('.url-display').forEach(a=>{if(getComputedStyle(a).display==='flex'&&a.href&&!a.href.endsWith('#'))recordLink(a,a.href);});
-
-    document.body.removeChild(measureClone);
-    document.head.removeChild(measureStyle);
-
-    const canvas=await html2canvas(wrap,{
-      scale:SCALE,useCORS:true,allowTaint:false,backgroundColor:'#ffffff',logging:false,
-      windowWidth:RENDER_W,width:RENDER_W,
-      onclone(clonedDoc,clonedEl){
-        clonedEl.style.cssText+=';width:'+RENDER_W+'px!important;min-width:'+RENDER_W+'px!important;max-width:'+RENDER_W+'px!important;overflow:visible!important;box-sizing:border-box!important';
-        const style=clonedDoc.createElement('style');style.textContent=COMPACT_CSS;clonedDoc.head.appendChild(style);
-        applyCompactTransforms(clonedEl);
-      }
-    });
-
-    const cssW=canvas.width/SCALE,cssH=canvas.height/SCALE;
-    const fitScale=Math.min(A4_W_PT/cssW,A4_H_PT/cssH);
-    const imgW=cssW*fitScale,imgH=cssH*fitScale;
-    const offsetX=(A4_W_PT-imgW)/2,offsetY=(A4_H_PT-imgH)/2;
-    const imgData=canvas.toDataURL('image/jpeg',0.97);
     const{jsPDF}=window.jspdf;
     const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
-    doc.addImage(imgData,'JPEG',offsetX,offsetY,imgW,imgH);
+    const PW=doc.internal.pageSize.getWidth();  // 595.28
+    const PH=doc.internal.pageSize.getHeight(); // 841.89
+    const M=26, L=M, R=PW-M, T=M, TW=R-L;
+    const USABLE=PH-M*2;
 
-    linkData.forEach(({fx,fy,fw,fh,url})=>{
-      doc.link(offsetX+fx*imgW,offsetY+fy*imgH,Math.max(fw*imgW,30),Math.max(fh*imgH,12),{url});
+    // ── Measure total height at a given font size ─────────────────────────
+    function totalH(fs){
+      doc.setFontSize(fs);doc.setFont('helvetica','normal');
+      const lh=doc.getLineHeight()/doc.internal.scaleFactor;
+      const sc=fs/10;
+      const hdr  = Math.round(78*sc);
+      const halfW= TW/2;
+      const cardH= Math.round(90*sc);
+      const ovW  = halfW-16-12;
+      const ovLines = data.overview?doc.splitTextToSize(data.overview,ovW).length:1;
+      const rowH = Math.max(cardH+36, 26+12+Math.max(ovLines*lh,18)+12+8);
+      const chkH = CHECKS.length*Math.round(36*sc)+Math.round(18*sc);
+      const ntW  = TW-16-12;
+      const ntLines= data.notes?doc.splitTextToSize(data.notes,ntW).length:1;
+      const notH = Math.max(Math.round(76*sc), Math.round(24+12+Math.max(ntLines*lh,14)+12+6));
+      const footH= Math.round(50*sc);
+      return hdr+rowH+chkH+notH+footH;
+    }
+
+    // Binary search for largest FS that fits
+    let FS=9.5;
+    for(let fs=9.5;fs>=4.5;fs-=0.25){
+      if(totalH(fs)<=USABLE){FS=fs;break;}
+      if(fs<=4.5)FS=fs;
+    }
+
+    // ── Recompute all heights at chosen FS ───────────────────────────────
+    doc.setFontSize(FS);doc.setFont('helvetica','normal');
+    const lh  = doc.getLineHeight()/doc.internal.scaleFactor;
+    const sc  = FS/10;
+    const halfW = TW/2;
+
+    const HDR_H  = Math.round(78*sc);
+    const LOGO_W = Math.round(135*sc);
+    const cardH  = Math.round(90*sc);
+    const ovW    = halfW-16-12;
+    const ovLines= data.overview?doc.splitTextToSize(data.overview,ovW).length:1;
+    const ROW_H  = Math.max(cardH+36, 26+12+Math.max(ovLines*lh,18)+12+8);
+    const chkRowH= Math.round(36*sc);
+    const chkPad = Math.round(9*sc);
+    const chkH   = CHECKS.length*chkRowH+chkPad*2;
+    const ntW    = TW-16-12;
+    const ntLines= data.notes?doc.splitTextToSize(data.notes,ntW).length:1;
+    const notesH = Math.max(Math.round(76*sc), Math.round(24+12+Math.max(ntLines*lh,14)+12+6));
+    const footH  = Math.round(50*sc);
+
+    // ── Palette & helpers ─────────────────────────────────────────────────
+    const NAVY=[26,58,107],NAVY_LIGHT=[46,93,168],PINK=[233,30,140];
+    const WHITE=[255,255,255],BORDER=[197,213,232],CELL_BG=[247,250,255];
+    const DARK=[26,40,64],MUTED=[107,122,153];
+
+    const fill=c=>{doc.setFillColor(...c);};
+    const stroke=(c,lw=0.5)=>{doc.setDrawColor(...c);doc.setLineWidth(lw);};
+    const tc=c=>{doc.setTextColor(...c);};
+    const box=(x,y,w,h,fc,sc2,lw=0.5)=>{if(fc){fill(fc);doc.rect(x,y,w,h,'F');}if(sc2){stroke(sc2,lw);doc.rect(x,y,w,h,'S');}};
+    const hl=(x1,x2,y,c=BORDER,lw=0.5)=>{stroke(c,lw);doc.line(x1,y,x2,y);};
+    const vl=(x,y1,y2,c=BORDER,lw=0.5)=>{stroke(c,lw);doc.line(x,y1,x,y2);};
+    const txt=(str,x,y,opts={})=>{
+      const{sz=FS,bold=false,col=DARK,align='left',mw,italic=false}=opts;
+      doc.setFontSize(sz);doc.setFont('helvetica',italic?'italic':bold?'bold':'normal');tc(col);
+      const o={};if(align!=='left')o.align=align;if(mw)o.maxWidth=mw;
+      doc.text(String(str||''),x,y,Object.keys(o).length?o:undefined);
+    };
+
+    let Y=T;
+
+    // ── HEADER ───────────────────────────────────────────────────────────
+    box(L,Y,LOGO_W,HDR_H,WHITE,null);
+    if(logoBase64){
+      const el=document.getElementById('logoImg');
+      const nw=el.naturalWidth||LOGO_W,nh=el.naturalHeight||HDR_H;
+      const ratio=Math.min((LOGO_W-14)/nw,(HDR_H-10)/nh);
+      doc.addImage(logoBase64,'PNG',L+(LOGO_W-nw*ratio)/2,Y+(HDR_H-nh*ratio)/2,nw*ratio,nh*ratio);
+    }
+    box(L+LOGO_W,Y,TW-LOGO_W,HDR_H,WHITE,null);
+    txt('Weekly Report',L+LOGO_W+(TW-LOGO_W)/2,Y+HDR_H/2+FS*0.38,{sz:FS*2.1,bold:true,col:PINK,align:'center'});
+    stroke(BORDER,0.8);doc.rect(L,Y,TW,HDR_H,'S');vl(L+LOGO_W,Y,Y+HDR_H,BORDER,0.8);
+    Y+=HDR_H;
+
+    // ── STUDENT + OVERVIEW ────────────────────────────────────────────────
+    box(L,Y,halfW,ROW_H,WHITE,null);
+    txt('Student',L+halfW/2,Y+FS*1.5,{sz:FS*1.15,bold:true,col:PINK,align:'center'});
+    const cx=L+7,cy=Y+Math.round(24*sc),cw=halfW-14,ch=cardH;
+    box(cx,cy,cw,ch,NAVY,null);
+    const nameH=Math.round(ch*0.44);
+    txt(data.name,cx+7,cy+nameH/2+FS*0.38,{sz:FS,bold:true,col:WHITE,mw:cw-14});
+    const mY=cy+nameH,mW=cw/5;
+    [data.subject,data.grade,data.week,data.month,data.year].forEach((lbl,i)=>{
+      const mx=cx+mW*i;
+      box(mx,mY,mW,ch-nameH,NAVY,null);
+      if(i>0)vl(mx,mY,cy+ch,[255,255,255],0.4);
+      doc.setFontSize(FS*0.85);doc.setFont('helvetica','bold');tc(WHITE);
+      doc.text(doc.splitTextToSize(String(lbl),mW-4),mx+mW/2,mY+(ch-nameH)/2+FS*0.35,{align:'center'});
     });
+    stroke(BORDER,0.7);doc.rect(cx,cy,cw,ch,'S');hl(cx,cx+cw,mY,BORDER,0.7);
 
-    doc.save('خطة-شهرية-'+name.replace(/\s+/g,'-')+'.pdf');
-    showToast('تم التصدير بنجاح','success');
+    box(L+halfW,Y,halfW,ROW_H,WHITE,null);
+    txt('Overview',L+halfW+halfW/2,Y+FS*1.5,{sz:FS*1.15,bold:true,col:PINK,align:'center'});
+    const ox=L+halfW+7,oy=Y+Math.round(24*sc),ow=halfW-14,oh=ROW_H-Math.round(30*sc);
+    stroke(NAVY_LIGHT,1);fill(CELL_BG);doc.rect(ox,oy,ow,oh,'FD');
+    if(data.overview){doc.setFontSize(FS);doc.setFont('helvetica','normal');tc(DARK);doc.text(doc.splitTextToSize(data.overview,ow-10),ox+5,oy+FS*1.0);}
+    else{txt('No overview provided.',ox+5,oy+FS*1.2,{sz:FS*0.9,col:MUTED,italic:true});}
+    stroke(BORDER,0.8);doc.rect(L,Y,TW,ROW_H,'S');vl(L+halfW,Y,Y+ROW_H,BORDER,0.8);hl(L,R,Y,BORDER,0.8);
+    Y+=ROW_H;
 
-  }catch(err){
-    console.error('Export error:',err);
-    showToast('حدث خطأ أثناء التصدير','error');
-  }
+    // ── CHECKBOXES ────────────────────────────────────────────────────────
+    box(L,Y,TW,chkH,WHITE,BORDER,0.7);
+    let chy=Y+chkPad;
+    const cbSz=Math.max(6,Math.round(8*sc));
+    CHECKS.forEach((item,ri)=>{
+      if(ri>0)hl(L,R,chy,BORDER,0.35);
+      txt(item.q,L+8,chy+FS*1.0,{sz:FS*0.92,bold:true,col:DARK,mw:TW-16});
+      let ox2=L+8;const optY=chy+FS*2.1;
+      item.opts.forEach(opt=>{
+        const isCk=checkedState[ri]===opt;
+        if(isCk){fill(NAVY);doc.rect(ox2,optY-cbSz+1,cbSz,cbSz,'F');stroke(NAVY,0.7);doc.rect(ox2,optY-cbSz+1,cbSz,cbSz,'S');doc.setDrawColor(255,255,255);doc.setLineWidth(1.1);doc.line(ox2+1.5,optY-2.5,ox2+2.8,optY-1);doc.line(ox2+2.8,optY-1,ox2+cbSz-1,optY-cbSz+2);doc.setLineWidth(0.5);}
+        else{stroke(NAVY,0.7);doc.rect(ox2,optY-cbSz+1,cbSz,cbSz,'S');}
+        txt(opt,ox2+cbSz+3,optY,{sz:FS*0.88,col:isCk?NAVY:DARK,bold:isCk});
+        ox2+=doc.getTextWidth(opt)+cbSz+18;
+      });
+      chy+=chkRowH;
+    });
+    Y+=chkH;
 
-  btns.forEach(b=>{b.disabled=false;b.innerHTML='&#x2193; تصدير PDF';});
+    // ── NOTES ─────────────────────────────────────────────────────────────
+    box(L,Y,TW,notesH,WHITE,BORDER,0.7);
+    txt('Notes',L+TW/2,Y+FS*1.4,{sz:FS*1.25,bold:true,col:PINK,align:'center'});
+    const nx=L+7,ny=Y+Math.round(22*sc),nw2=TW-14,nh2=notesH-Math.round(28*sc);
+    stroke(NAVY,1);fill(CELL_BG);doc.rect(nx,ny,nw2,nh2,'FD');
+    if(data.notes){doc.setFontSize(FS);doc.setFont('helvetica','normal');tc(DARK);doc.text(doc.splitTextToSize(data.notes,nw2-10),nx+5,ny+FS*1.0);}
+    Y+=notesH;
+
+    // ── FOOTER — pinned to bottom ─────────────────────────────────────────
+    const footerY=PH-M-footH;
+    box(L,footerY,TW,footH,WHITE,BORDER,0.7);
+    box(L,footerY,TW,Math.max(2,Math.round(3*sc)),NAVY,null);
+    if(footerBase64){
+      const fEl=document.querySelector('.rpt-footer img');
+      const nw3=fEl.naturalWidth||TW,nh3=fEl.naturalHeight||footH;
+      const ratio=Math.min((TW-14)/nw3,(footH-6)/nh3);
+      doc.addImage(footerBase64,'PNG',L+(TW-nw3*ratio)/2,footerY+(footH-nh3*ratio)/2,nw3*ratio,nh3*ratio);
+    }
+
+    // ── SAVE ──────────────────────────────────────────────────────────────
+    function slug(t){return t.toLowerCase().trim().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');}
+    const fn='week-'+document.getElementById('week').value+'-'+slug(data.name||'student')+'-'+slug(data.month)+'-'+data.year+'.pdf';
+    doc.save(fn);
+    showToast('✓ PDF downloaded!','success');
+
+  }catch(err){console.error(err);showToast('Export failed — see console','error');}
+  btns.forEach(b=>{b.disabled=false;b.innerHTML='<span>↓</span> Export PDF';});
 }
 </script>
 </body>
