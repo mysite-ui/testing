@@ -544,26 +544,32 @@ function showToast(msg,type='success'){
 }
 
 // ── Shared compact-style transformer (applied identically to measure clone & onclone) ──
+// Portrait A4 render width = 794px. All sizes tuned so the full plan fits one page.
 const COMPACT_CSS=`
   *{box-sizing:border-box!important;}
-  .tpl-grid td,.tpl-grid th{padding:3px 5px!important;font-size:9px!important;line-height:1.3!important;}
-  .week-cell{font-size:9px!important;padding:3px 2px!important;}
-  .lesson-cell{font-size:9px!important;padding:3px 2px!important;}
-  .input-cell{padding:3px 6px!important;}
-  .tpl-header{min-height:60px!important;}
-  .tpl-logo-cell{min-height:60px!important;padding:4px 10px!important;}
-  .info-label{font-size:8px!important;padding:3px 2px!important;}
-  .info-value{font-size:10px!important;padding:4px 4px!important;min-height:32px!important;}
-  .tpl-title-bar{font-size:13px!important;padding:6px!important;}
-  .tpl-assess-bar{font-size:11px!important;padding:5px!important;}
-  .tpl-assess-body{padding:5px 10px!important;min-height:40px!important;}
-  .tpl-footer{padding:4px 12px!important;}
-  .tpl-footer div{height:32px!important;line-height:32px!important;font-size:11px!important;}
+  .tpl-wrap{max-width:794px!important;}
+  .tpl-header{display:grid!important;grid-template-columns:140px 1fr!important;min-height:52px!important;}
+  .tpl-logo-cell{min-height:52px!important;padding:3px 8px!important;}
+  .tpl-logo-cell img{max-width:110px!important;max-height:46px!important;}
+  .info-row{grid-template-columns:1fr 1fr 1fr 1fr!important;}
+  .info-label{font-size:7px!important;padding:2px 2px!important;}
+  .info-value{font-size:8.5px!important;padding:3px 3px!important;min-height:26px!important;}
+  .tpl-title-bar{font-size:11px!important;padding:4px!important;}
+  .tpl-grid td,.tpl-grid th{padding:2px 4px!important;font-size:7.5px!important;line-height:1.25!important;}
+  .tpl-grid th{padding:4px 4px!important;font-size:8px!important;}
+  .week-cell{font-size:7.5px!important;padding:2px 2px!important;width:48px!important;}
+  .lesson-cell{font-size:7.5px!important;padding:2px 2px!important;width:44px!important;}
+  .input-cell{padding:2px 5px!important;}
   .tpl-grid-wrap{overflow:visible!important;}
-  .hw-link-disp{padding:2px 5px!important;margin-top:2px!important;}
-  .hw-link-anchor{font-size:9px!important;}
+  .hw-link-disp{padding:1px 4px!important;margin-top:1px!important;}
+  .hw-link-anchor{font-size:7px!important;}
+  .hw-url-inp{display:none!important;}
+  .tpl-assess-bar{font-size:9px!important;padding:4px!important;}
+  .tpl-assess-body{padding:4px 8px!important;min-height:30px!important;}
+  .tpl-footer{padding:3px 10px!important;}
+  .tpl-footer img{max-height:36px!important;}
 `;
-const TA_STYLE='font-family:Cairo,sans-serif;font-size:9px;font-weight:600;color:#1a2840;line-height:1.3;white-space:pre-wrap;word-break:break-word;width:100%;padding:0;direction:rtl;text-align:right;background:transparent;';
+const TA_STYLE='font-family:Cairo,sans-serif;font-size:7.5px;font-weight:600;color:#1a2840;line-height:1.25;white-space:pre-wrap;word-break:break-word;width:100%;padding:0;direction:rtl;text-align:right;background:transparent;';
 
 function applyCompactTransforms(root){
   // Textareas → static divs
@@ -604,8 +610,9 @@ async function handleExport(){
   const btns=[document.getElementById('exportBtn'),document.getElementById('exportBtn2')];
   btns.forEach(b=>{b.disabled=true;b.innerHTML='<span class="spin"></span> جارٍ الإنشاء…';});
 
-  const A4_W_PT=841.89, A4_H_PT=595.28;
-  const RENDER_W=1123;
+  // Portrait A4: 595.28pt wide × 841.89pt tall
+  const A4_W_PT=595.28, A4_H_PT=841.89;
+  const RENDER_W=794; // ≈ 595pt at 96dpi — matches portrait width
   const SCALE=2;
 
   try{
@@ -712,7 +719,7 @@ async function handleExport(){
       }
     });
 
-    // ── STEP 4: Scale-to-fit A4 landscape ────────────────────────────────────
+    // ── STEP 4: Scale-to-fit portrait A4 ─────────────────────────────────────
     const cssW=canvas.width /SCALE;  // logical px = RENDER_W
     const cssH=canvas.height/SCALE;  // logical px = full natural height
 
@@ -724,7 +731,7 @@ async function handleExport(){
 
     const imgData=canvas.toDataURL('image/jpeg',0.97);
     const{jsPDF}=window.jspdf;
-    const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
+    const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
     doc.addImage(imgData,'JPEG',offsetX,offsetY,imgW,imgH);
 
     // ── STEP 5: Annotate clickable links ──────────────────────────────────────
